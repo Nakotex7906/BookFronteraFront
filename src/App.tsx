@@ -19,7 +19,7 @@ import './App.css';
         const fetchRooms = async () => {
           try {
             // Usamos la variable de entorno que definimos en .env
-            const apiUrl = `${import.meta.env.VITE_API_URL}/api/rooms`;
+            const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/rooms`;
             console.log(`Fetching rooms from: ${apiUrl}`);
    
             const response = await fetch(apiUrl);
