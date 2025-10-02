@@ -1,0 +1,87 @@
+/* Contenedor tarjeta */
+.grid {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    overflow: hidden;
+    margin: 0 auto 1rem;
+}
+
+/* Cabecera de columnas (SALA + horarios) */
+.header {
+    display: grid;
+    grid-template-columns: 200px repeat(auto-fit, minmax(90px, 1fr));
+    background-color: #f5f6f7;
+    border-bottom: 2px solid #e9ecef;
+    font-weight: 700;
+    font-size: .85rem;
+    color: #495057;
+}
+.headCell {
+    padding: 0.9rem 0.5rem;
+    text-align: center;
+    border-right: 1px solid #e9ecef;
+    white-space: nowrap;          /* evita que se junten los horarios */
+}
+.headCell:first-child {
+    text-align: left;
+    padding-left: 1.25rem;
+}
+
+/* Filas por sala */
+.row {
+    display: grid;
+    grid-template-columns: 200px repeat(auto-fit, minmax(90px, 1fr));
+    border-bottom: 1px solid #e9ecef;
+}
+.row:hover { background-color: #fafbfc; }
+.row:last-child { border-bottom: 0; }
+
+/* Celda nombre de sala */
+.roomCell {
+    padding: 0.9rem 1.25rem;
+    font-weight: 600;
+    color: #212529;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #e9ecef;
+    white-space: nowrap;
+}
+
+/* Celdas de disponibilidad (bloques de color) */
+.cell {
+    display: inline-block;
+    margin: 6px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: transform .1s ease, opacity .15s ease;
+}
+.cell:hover:not([aria-disabled="true"]) { transform: scale(0.96); }
+.cell[aria-disabled="true"] { cursor: not-allowed; opacity: .9; }
+
+/* Colores */
+.available   { background-color: #69bc41; }
+.unavailable { background-color: #f5222d; }
+
+/* Responsivo */
+@media (max-width: 1024px) {
+    .header, .row {
+        grid-template-columns: 160px repeat(auto-fit, minmax(70px, 1fr));
+    }
+    .headCell, .roomCell { font-size: .8rem; }
+    .cell { height: 28px; margin: 5px; }
+}
+@media (max-width: 768px) {
+    .header, .row {
+        grid-template-columns: 120px repeat(auto-fit, minmax(56px, 1fr));
+    }
+    .headCell, .roomCell { font-size: .7rem; padding: .6rem .4rem; }
+    .cell { height: 24px; margin: 4px; border-radius: 6px; }
+}
+.selected {
+    background-color: #1890ff;
+    border: 2px solid #0050b3;
+}
