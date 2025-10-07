@@ -21,7 +21,7 @@ export default function Home() {
                             data={matrix}
                             onSelect={(roomId, slotId) => {
                                 console.log(`Selected room ${roomId} at slot ${slotId}`);
-                                // abrir modal o navegar a /reservar?roomId=...&slotId=...
+                                // navegar a /reservar?roomId=...&slotId=...
                             }}
                         />
                         <Legend />

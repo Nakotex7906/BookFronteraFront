@@ -1,87 +1,92 @@
-/* Contenedor tarjeta */
-.grid {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,.08);
-    overflow: hidden;
-    margin: 0 auto 1rem;
+/* --- Variables CSS Personalizadas --- */
+:root {
+    --slot-count: 12; /* valor por defecto */
 }
 
-/* Cabecera de columnas (SALA + horarios) */
+/* --- Wrapper con scroll si no caben todos los intervalos --- */
+.wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* --- Tarjeta --- */
+.grid {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    margin: 0 auto 1rem;
+    padding: 16px;
+    min-width: calc(240px + var(--slot-count, 12) * 100px);
+}
+
+/* --- Cabecera --- */
 .header {
     display: grid;
-    grid-template-columns: 200px repeat(auto-fit, minmax(90px, 1fr));
-    background-color: #f5f6f7;
+    align-items: center;
+    column-gap: 14px;
     border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+}
+.headCell {
     font-weight: 700;
     font-size: .85rem;
     color: #495057;
-}
-.headCell {
-    padding: 0.9rem 0.5rem;
     text-align: center;
-    border-right: 1px solid #e9ecef;
-    white-space: nowrap;          /* evita que se junten los horarios */
+    white-space: nowrap;
 }
 .headCell:first-child {
     text-align: left;
-    padding-left: 1.25rem;
+    padding-left: 6px;
 }
 
-/* Filas por sala */
+/* --- Filas --- */
 .row {
     display: grid;
-    grid-template-columns: 200px repeat(auto-fit, minmax(90px, 1fr));
-    border-bottom: 1px solid #e9ecef;
+    align-items: center;
+    column-gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f3f5;
 }
-.row:hover { background-color: #fafbfc; }
 .row:last-child { border-bottom: 0; }
 
-/* Celda nombre de sala */
+/* Columna de sala */
 .roomCell {
-    padding: 0.9rem 1.25rem;
     font-weight: 600;
     color: #212529;
-    display: flex;
-    align-items: center;
-    border-right: 1px solid #e9ecef;
     white-space: nowrap;
 }
 
-/* Celdas de disponibilidad (bloques de color) */
+/* --- Casillas (botón de disponibilidad) --- */
 .cell {
-    display: inline-block;
-    margin: 6px;
+    display: block;
+    width: 100%;
     height: 32px;
     border-radius: 8px;
     border: none;
-    background: transparent;
     cursor: pointer;
-    transition: transform .1s ease, opacity .15s ease;
+    transition: transform .08s ease, box-shadow .08s ease, opacity .15s ease;
 }
-.cell:hover:not([aria-disabled="true"]) { transform: scale(0.96); }
+.cell:hover:not([aria-disabled="true"]) { transform: scale(0.98); }
+.cell:focus-visible {
+    outline: 3px solid #91caff;
+    outline-offset: 2px;
+}
 .cell[aria-disabled="true"] { cursor: not-allowed; opacity: .9; }
 
-/* Colores */
+/* Estados */
 .available   { background-color: #69bc41; }
 .unavailable { background-color: #f5222d; }
+.selected    { background-color: #1890ff; box-shadow: 0 0 0 3px rgba(24,144,255,.25); }
 
-/* Responsivo */
+/* Responsivo  */
 @media (max-width: 1024px) {
-    .header, .row {
-        grid-template-columns: 160px repeat(auto-fit, minmax(70px, 1fr));
-    }
-    .headCell, .roomCell { font-size: .8rem; }
-    .cell { height: 28px; margin: 5px; }
+    .grid { min-width: calc(200px + var(--slot-count, 12) * 90px); }
+    .headCell { font-size: .8rem; }
+    .cell { height: 28px; }
 }
 @media (max-width: 768px) {
-    .header, .row {
-        grid-template-columns: 120px repeat(auto-fit, minmax(56px, 1fr));
-    }
-    .headCell, .roomCell { font-size: .7rem; padding: .6rem .4rem; }
-    .cell { height: 24px; margin: 4px; border-radius: 6px; }
-}
-.selected {
-    background-color: #1890ff;
-    border: 2px solid #0050b3;
+    .grid { min-width: calc(160px + var(--slot-count, 12) * 80px); }
+    .headCell { font-size: .75rem; }
+    .cell { height: 26px; border-radius: 6px; }
 }
