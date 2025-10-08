@@ -1,4 +1,5 @@
 import styles from "./Navbar.module.css";
+import {Link} from "react-router-dom";
 
 export default function Navbar() {
     return (
@@ -20,7 +21,7 @@ export default function Navbar() {
                     <button type="button" className={styles.helpButton} aria-haspopup="menu" aria-expanded="false">
                         Ayuda <span className={styles.chevron} aria-hidden="true">▾</span>
                     </button>
-                    <button type="button" className={styles.loginButton}>Login</button>
+                    <Link to="/login" className={styles.loginButton}>Login</Link>
                 </div>
             </div>
         </nav>
