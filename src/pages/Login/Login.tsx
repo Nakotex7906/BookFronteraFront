@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import type { LoginFormData } from "../../types/LoginFormData";
 import API_BASE from "../../apiconfig";
+import stylesLogin from "./Login.module.css";
+import {Link} from "react-router-dom";
 
 /**
  * Componente de Login para autenticar al usuario.
@@ -67,9 +69,48 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div>
-            <h1>Login</h1>
-            <a>Guille falta hacer el html y css</a>
+        <div className={stylesLogin["login-container"]}>
+            <div className={stylesLogin["login-card"]}>
+                <div className={stylesLogin["login-header"]}>
+                    <h1 className={stylesLogin["login-title"]}>BookFrontera</h1>
+                </div>
+                <form className={stylesLogin["login-form"]} onSubmit={handleSubmit}>
+                    <div>
+                        <label className={stylesLogin["form-label"]} htmlFor="usuario">Usuario</label>
+                        <input
+                            className={stylesLogin["form-input"]} id="usuario" name="username" value={formData.username}
+                            onChange={handleChange} placeholder="Ingrese su usuario" type="text"
+                        />
+                    </div>
+                    <div>
+                        <label className={stylesLogin["form-label"]} htmlFor="contrasena">Contraseña</label>
+                        <input
+                            className={stylesLogin["form-input"]} id="contrasena" name="password"
+                            value={formData.password} onChange={handleChange} placeholder="Ingrese su contraseña" type="password"
+                        />
+                    </div>
+                    <div className={stylesLogin["form-options"]}>
+                        <div className={stylesLogin["remember-me"]}>
+                            <input
+                                className={stylesLogin["form-checkbox"]} id="recordarme" name="rememberMe"
+                                checked={formData.rememberMe} onChange={handleChange} type="checkbox"
+                            />
+                            <label className={stylesLogin["form-label-checkbox"]} htmlFor="recordarme">Recordarme</label>
+                        </div>
+                        <div className={stylesLogin["forgot-password"]}>
+                            <a href="#">¿Olvidaste tu contraseña?</a>
+                        </div>
+                    </div>
+                    <div>
+                        <button className={stylesLogin["submit-button"]} type="submit">
+                            Ingresar
+                        </button>
+                    </div>
+                    <div>
+                        <Link to="/" className={stylesLogin["home-link"]}>Volver al inicio</Link>
+                    </div>
+                </form>
+            </div>
         </div>
     );
 };
