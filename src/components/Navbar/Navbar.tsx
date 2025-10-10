@@ -14,8 +14,8 @@ export default function Navbar() {
                 <ul className={styles.navLinks}>
                     <li><a href="/servicios">Servicios Online</a></li>
                     <li><a href="/webmail">Webmail</a></li>
-                    <li><a href="/campus">Campus Virtual</a></li>
-                    <li><a href="/intranet">Intranet</a></li>
+                    <li><a href="https://campusvirtual.ufro.cl/">Campus Virtual</a></li>
+                    <li><a href="https://intranet.ufro.cl/">Intranet</a></li>
                 </ul>
 
                 <div className={styles.navActions}>
