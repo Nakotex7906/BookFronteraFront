@@ -124,6 +124,9 @@ body {
 .submit-button:hover {
     background-color: var(--u-sky-blue);
 }
+.submit-button:active {
+    transform: translateY(1px);
+}
 .home-link {
     display: block;
     text-align: center;
