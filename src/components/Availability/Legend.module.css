@@ -34,7 +34,7 @@
 
 .selected {
     background-color: #1890ff;
-    border: 2px solid #0050b3;
+    border: 2px solid #91caff;
 }
 
 @media (max-width: 600px) {

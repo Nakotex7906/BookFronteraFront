@@ -27,7 +27,7 @@ export default function AvailabilityGrid({ rooms, slots, data, onSelect }: Props
 
     // Plantilla de columnas: 1 fija para "Sala" y N para slots
     const gridTemplate = useMemo(
-        () => `240px repeat(${sortedSlots.length}, 1fr)`,
+        () => `170px repeat(${sortedSlots.length}, 1fr)`,
         [sortedSlots.length]
     );
 
