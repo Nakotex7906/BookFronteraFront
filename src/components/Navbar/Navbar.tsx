@@ -1,8 +1,11 @@
 import styles from "./Navbar.module.css";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import logoUfro from '../../assets/icons/Logo_Ufro.png';
+import { useAuth } from "../../context/AuthContext.tsx";
 
 export default function Navbar() {
+    const { user, isLoading, logout } = useAuth();
+
     return (
         <nav className={styles.navbar} role="navigation" aria-label="Principal">
             <div className={styles.navContainer}>
@@ -22,7 +25,14 @@ export default function Navbar() {
                     <button type="button" className={styles.helpButton} aria-haspopup="menu" aria-expanded="false">
                         Ayuda <span className={styles.chevron} aria-hidden="true">▾</span>
                     </button>
-                    <Link to="/login" className={styles.loginButton}>Iniciar sesión</Link>
+                    {isLoading ? null : user ? (
+                        <>
+                            <span className={styles.userName}>Hola, {user.nombre}</span>
+                            <button onClick={logout} className={styles.loginButton}>Cerrar sesión</button>
+                        </>
+                    ) : (
+                        <Link to="/login" className={styles.loginButton}>Iniciar sesión</Link>
+                    )}
                 </div>
             </div>
         </nav>
