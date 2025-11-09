@@ -6,12 +6,15 @@ export interface Availability {
     slotId: string;
     available: boolean;
 }
+
+// Este tipo ahora debe coincidir con DTO de Spring
 export type ReservationRequest = {
     roomId: string;
-    slotId: string;
-    date: string;        // "2025-10-06"
-    userId: string;
+    startAt: string;  // <-- Coincide con req.startAt()
+    endAt: string;    // <-- Coincide con req.endAt()
+    addToGoogleCalendar: boolean; // <-- Coincide con req.addToGoogleCalendar()
 };
+
 export type ReservationResponse = {
     id: string;
 };

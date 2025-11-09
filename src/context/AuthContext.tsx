@@ -1,39 +1,43 @@
 import React, { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
-import API_BASE from '../apiconfig'; // Asegúrate que la ruta a tu apiconfig es correcta
+import API_BASE from '../apiconfig';
 
-// 1. Define la estructura del objeto User, debe coincidir con el UserDto del backend
 interface User {
     id: number;
     email: string;
     nombre: string;
     rol: 'USER' | 'ADMIN';
 }
-
-// 2. Define la estructura del Context
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     logout: () => void;
 }
-
-// 3. Crea el Context con un valor por defecto
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// 4. Crea el componente "Proveedor" del contexto
 interface AuthProviderProps {
     children: ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
+
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Al cargar la app, pregunta al backend quién es el usuario actual
+        const controller = new AbortController();
+        const signal = controller.signal;
+
+        // Si el backend está caído, falla en 2 segundos
+        const timeoutId = setTimeout(() => {
+            console.warn("Auth fetch timed out.");
+            controller.abort();
+        }, 2000); // 2 segundos
+
         const fetchUser = async () => {
             try {
                 const response = await fetch(`${API_BASE}/users/me`, {
-                    credentials: 'include', // ¡Muy importante para enviar la cookie de sesión!
+                    credentials: 'include',
+                    signal: signal, // Pasar el 'signal' al fetch
                 });
 
                 if (response.ok) {
@@ -42,20 +46,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 } else {
                     setUser(null);
                 }
-            } catch (error) {
-                console.error("Error fetching user:", error);
+            } catch (error: any) {
+                if (error.name === 'AbortError') {
+                    console.log("Fetch aborted (timeout).");
+                } else {
+                    console.error("Error fetching user:", error);
+                }
                 setUser(null);
             } finally {
+                // Limpiar el timeout y terminar el loading
+                clearTimeout(timeoutId);
                 setIsLoading(false);
             }
         };
 
         fetchUser();
+
+        return () => {
+            clearTimeout(timeoutId);
+            controller.abort();
+        };
     }, []);
 
     const logout = () => {
-        // Redirige al endpoint de logout del backend
-        // El backend se encargará de limpiar la sesión y la cookie
         window.location.href = `${API_BASE}/logout`;
     };
 
@@ -66,7 +79,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     );
 };
 
-// 5. Crea un hook personalizado para consumir el contexto fácilmente
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (context === undefined) {
