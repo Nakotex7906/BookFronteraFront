@@ -1,19 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+    // Archivos que Tailwind debe escanear
     content: [
         "./index.html",
-        "./src/**/*.{js,ts,jsx,tsx}",
+        "./src/**/*.{js,ts,jsx,tsx}", // Incluye todos tus archivos de React
     ],
     theme: {
-        extend: {
-            // Aquí añades colores, fuentes, etc.
-            colors: {
-                'ufro-blue': '#0a3fa6',
-                'ufro-blue-dark': '#072d78',
-                'ufro-muted': '#6b7280',
-                'ufro-bg': '#f9fafb',
-            }
-        },
+        extend: {},
     },
     plugins: [],
 }
