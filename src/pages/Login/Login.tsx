@@ -1,5 +1,4 @@
 import React from "react";
-import stylesLogin from "./Login.module.css";
 
 /**
  * Login page component for BookFrontera.
@@ -10,23 +9,41 @@ const Login: React.FC = () => {
     const googleLoginUrl = "http://localhost:8080/oauth2/authorization/google";
 
     return (
-        <div className={stylesLogin.page}>
-            <div className={stylesLogin.card}>
-                <header className={stylesLogin.header}>
-                    <h1 className={stylesLogin.title}>BookFrontera</h1>
-                    <p style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+        <div className="grid min-h-screen place-items-center bg-[#f9fafb] p-4">
+            {/* .card */}
+            <div className="w-full max-w-[440px] rounded-2xl border border-[#eef2f7] bg-white p-7 shadow-[0_10px_30px_rgba(2,6,23,0.06)]">
+                {/* .header */}
+                <header className="mb-[18px] text-center">
+                    {/* .title */}
+                    <h1 className="m-0 text-[28px] font-extrabold leading-[1.2] text-[#0a3fa6]">
+                        BookFrontera
+                    </h1>
+                    <p className="mt-2 text-center">
                         Inicia sesión para continuar
                     </p>
                 </header>
 
                 {/* --- Botón Google (Spring Security OAuth2 Login) --- */}
+                {/* .googleButton */}
                 <a
-                    className={stylesLogin.googleButton}
+                    className="
+                        inline-flex h-[42px] w-full items-center justify-center
+                        gap-2.5 rounded-[10px] border border-[#e5e7eb] bg-white
+                        text-[0.95rem] font-semibold text-[#111827] no-underline
+                        shadow-[0_1px_2px_rgba(0,0,0,.05)]
+                        transition-all duration-150
+                        hover:border-[#d1d5db]
+                        hover:shadow-[0_4px_18px_rgba(0,0,0,.08)]
+                        active:translate-y-px
+                        focus-visible:outline-2 focus-visible:outline-offset-2
+                        focus-visible:outline-[#60a5fa]
+                    "
                     href={googleLoginUrl}
                     rel="noopener noreferrer"
                 >
+                    {/* .googleIcon */}
                     <svg
-                        className={stylesLogin.googleIcon}
+                        className="inline-block h-[18px] w-[18px]"
                         viewBox="0 0 48 48"
                         aria-hidden="true"
                     >
