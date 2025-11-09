@@ -1,5 +1,4 @@
-import { useMemo, useState, type CSSProperties } from "react";
-import styles from "./AvailabilityGrid.module.css";
+import { useMemo, useState} from "react";
 import type { Room } from "../../types/room";
 import type { TimeSlot, Availability } from "../../types/schedule";
 
@@ -19,21 +18,23 @@ const toMinutes = (id: string) => {
 export default function AvailabilityGrid({ rooms, slots, data, onSelect }: Props) {
     const [selected, setSelected] = useState<{ roomId: string; slotId: string } | null>(null);
 
-    // Ordena por hora de inicio para que los encabezados y celdas coincidan
     const sortedSlots = useMemo(
         () => [...slots].sort((a, b) => toMinutes(a.id) - toMinutes(b.id)),
         [slots]
     );
 
-    // Plantilla de columnas: 1 fija para "Sala" y N para slots
     const gridTemplate = useMemo(
         () => `240px repeat(${sortedSlots.length}, 1fr)`,
         [sortedSlots.length]
     );
 
-    const cssVars: CSSProperties = {
-        ["--slot-count" as any]: sortedSlots.length,
-    };
+    // 2. Lógica de min-width movida aquí desde el CSS para Tailwind
+    // (Tu CSS usaba max-width, así que invertimos para mobile-first de Tailwind)
+    const gridMinWClasses = `
+      min-w-[calc(160px+${sortedSlots.length}*80px)]
+      md:min-w-[calc(200px+${sortedSlots.length}*90px)]
+      lg:min-w-[calc(240px+${sortedSlots.length}*100px)]
+    `;
 
     const isAvailable = (roomId: string | number, slotId: string) =>
         data.some(
@@ -46,16 +47,37 @@ export default function AvailabilityGrid({ rooms, slots, data, onSelect }: Props
         onSelect(roomId, slotId);
     };
 
+    // 3. Clases base de Tailwind para la celda
+    const cellBaseClasses =
+        "block w-full h-8 rounded-lg border-none cursor-pointer transition-all duration-75 ease-out hover:enabled:scale-[0.98] focus-visible:outline-offset-2 focus-visible:outline-3 focus-visible:outline-[#91caff] aria-disabled:cursor-not-allowed aria-disabled:opacity-90";
+
     return (
-        <div className={styles.wrapper}>
-            <div className={styles.grid} style={cssVars}>
+        // 4. Todas las clases de `styles.wrapper` reemplazadas
+        <div className="w-full overflow-x-auto overflow-y-hidden">
+            <div
+                // 5. Clases de `styles.grid` + `min-width` dinámico
+                className={`bg-white rounded-xl shadow-lg mx-auto mb-4 p-4 ${gridMinWClasses}`}
+                // `style={cssVars}` ya no es necesario
+            >
                 {/* Header */}
-                <div className={styles.header} style={{ gridTemplateColumns: gridTemplate }}>
-                    <span className={styles.headCell}>SALA (CAPACIDAD)</span>
+                <div
+                    // 6. Clases de `styles.header`
+                    className="grid items-center gap-x-3.5 border-b-2 border-[#e9ecef] pb-2.5"
+                    style={{ gridTemplateColumns: gridTemplate }}
+                >
+                    <span
+                        // 7. Clases de `styles.headCell` + `first-child`
+                        className="font-bold text-[.85rem] text-[#495057] text-center whitespace-nowrap first:text-left first:pl-1.5"
+                    >
+                        SALA (CAPACIDAD)
+                    </span>
                     {sortedSlots.map((s) => (
-                        <span key={s.id} className={styles.headCell}>
-              {s.label}
-            </span>
+                        <span
+                            key={s.id}
+                            className="font-bold text-[.85rem] text-[#495057] text-center whitespace-nowrap first:text-left first:pl-1.5"
+                        >
+                            {s.label}
+                        </span>
                     ))}
                 </div>
 
@@ -63,29 +85,35 @@ export default function AvailabilityGrid({ rooms, slots, data, onSelect }: Props
                 {rooms.map((room) => (
                     <div
                         key={room.id}
-                        className={styles.row}
+                        // 8. Clases de `styles.row` + `last-child`
+                        className="grid items-center gap-x-3.5 py-3 border-b border-[#f1f3f5] last:border-b-0"
                         style={{ gridTemplateColumns: gridTemplate }}
                         role="row"
                     >
-            <span className={styles.roomCell}>
-              {room.name} ({room.capacity})
-            </span>
+                        <span
+                            // 9. Clases de `styles.roomCell`
+                            className="font-semibold text-[#212529] whitespace-nowrap"
+                        >
+                            {room.name} ({room.capacity})
+                        </span>
 
                         {sortedSlots.map((slot) => {
                             const available = isAvailable(room.id, slot.id);
                             const isSelected =
                                 selected?.roomId === String(room.id) && selected?.slotId === slot.id;
 
-                            const cellClass = isSelected
-                                ? styles.selected
+                            // 10. Lógica de clases movida a Tailwind
+                            const cellStateClasses = isSelected
+                                ? "bg-[#1890ff] shadow-[0_0_0_3px_rgba(24,144,255,.25)]" // .selected
                                 : available
-                                    ? styles.available
-                                    : styles.unavailable;
+                                    ? "bg-[#69bc41]" // .available
+                                    : "bg-[#f5222d]"; // .unavailable
 
                             return (
                                 <button
                                     key={slot.id}
-                                    className={`${styles.cell} ${cellClass}`}
+                                    // 11. Se combinan las clases base y las de estado
+                                    className={`${cellBaseClasses} ${cellStateClasses}`}
                                     role="gridcell"
                                     type="button"
                                     onClick={() =>
@@ -93,7 +121,11 @@ export default function AvailabilityGrid({ rooms, slots, data, onSelect }: Props
                                     }
                                     aria-disabled={!available}
                                     aria-label={`${room.name}, ${slot.label}: ${
-                                        isSelected ? "Seleccionado" : available ? "Disponible" : "No disponible"
+                                        isSelected
+                                            ? "Seleccionado"
+                                            : available
+                                                ? "Disponible"
+                                                : "No disponible"
                                     }`}
                                 />
                             );
