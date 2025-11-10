@@ -5,6 +5,7 @@ import type {
     Availability,
     ReservationRequest,
     ReservationResponse,
+    MyReservationsResponse,
 } from "../types/schedule";
 import { AxiosError } from "axios";
 
@@ -67,4 +68,28 @@ export class AvailabilityApi {
             throw new Error(errorMessage(e));
         }
     }
+
+    /**
+     * Obtiene las reservas del usuario autenticado.
+     */
+    static async getMyReservations(): Promise<MyReservationsResponse> {
+        try {
+            const { data } = await http.get<MyReservationsResponse>("/reservations/my-reservations");
+            return data;
+        } catch (e) {
+            throw new Error(errorMessage(e));
+        }
+    }
+
+    /**
+     * Cancela una reserva por su ID.
+     */
+    static async cancelReservation(id: number): Promise<void> {
+        try {
+            await http.delete(`/reservations/${id}`);
+        } catch (e) {
+            throw new Error(errorMessage(e));
+        }
+    }
+
 }

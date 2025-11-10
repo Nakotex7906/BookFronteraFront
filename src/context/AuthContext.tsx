@@ -20,24 +20,14 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const controller = new AbortController();
-        const signal = controller.signal;
-
-        // Si el backend está caído, falla en 2 segundos
-        const timeoutId = setTimeout(() => {
-            console.warn("Auth fetch timed out.");
-            controller.abort();
-        }, 2000); // 2 segundos
 
         const fetchUser = async () => {
             try {
                 const response = await fetch(`${API_BASE}/users/me`, {
                     credentials: 'include',
-                    signal: signal, // Pasar el 'signal' al fetch
                 });
 
                 if (response.ok) {
@@ -47,25 +37,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     setUser(null);
                 }
             } catch (error: any) {
-                if (error.name === 'AbortError') {
-                    console.log("Fetch aborted (timeout).");
-                } else {
-                    console.error("Error fetching user:", error);
-                }
+                console.error("Error fetching user:", error);
                 setUser(null);
             } finally {
-                // Limpiar el timeout y terminar el loading
-                clearTimeout(timeoutId);
                 setIsLoading(false);
             }
         };
 
         fetchUser();
 
-        return () => {
-            clearTimeout(timeoutId);
-            controller.abort();
-        };
     }, []);
 
     const logout = () => {

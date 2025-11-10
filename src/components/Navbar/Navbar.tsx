@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import logoUfro from '../../assets/icons/Logo_Ufro.png';
 import { useAuth } from "../../context/AuthContext.tsx";
 
@@ -6,6 +6,14 @@ export default function Navbar() {
     const { user, isLoading, logout } = useAuth();
 
     const baseButtonClasses = "text-sm font-medium text-white bg-[#1b66e5] border-0 rounded-lg cursor-pointer transition-all duration-150 hover:bg-[#1556c4] active:translate-y-px";
+
+    // Usa NavLink para detectar la ruta activa
+    const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
+        `text-[0.95rem] no-underline whitespace-nowrap transition-colors duration-150 px-3 py-2 rounded-md ${
+            isActive
+                ? 'font-semibold text-[#1f3b8a] bg-blue-100' // Estilo activo
+                : 'text-[#434a54] hover:text-[#1f3b8a]'
+        }`;
 
     return (
         <nav
@@ -24,8 +32,8 @@ export default function Navbar() {
                 "
             >
                 {/* --- Logo --- */}
-                <a
-                    href="/"
+                <Link
+                    to="/"
                     className="inline-flex items-center gap-2.5 justify-self-start no-underline transition-opacity duration-200 hover:opacity-90"
                     aria-label="Inicio BookFrontera"
                 >
@@ -33,9 +41,9 @@ export default function Navbar() {
                     <span className="text-xl font-bold text-[#002976]">
                         BookFrontera
                     </span>
-                </a>
+                </Link>
 
-                {/* --- Links (ocultos en móvil) --- */}
+                {/* --- Links (CONDICIONALES) --- */}
                 <ul
                     className="
                         m-0 hidden list-none p-0
@@ -43,38 +51,62 @@ export default function Navbar() {
                         xl:gap-7
                     "
                 >
-                    <li>
-                        <a
-                            href="https://www.ufro.cl/servicios-online/"
-                            className="text-[0.95rem] text-[#434a54] no-underline whitespace-nowrap transition-colors duration-150 hover:text-[#1f3b8a]"
-                        >
-                            Servicios Online
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="https://www.ufro.cl/"
-                            className="text-[0.95rem] text-[#434a54] no-underline whitespace-nowrap transition-colors duration-150 hover:text-[#1f3b8a]"
-                        >
-                            Universidad
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="https://campusvirtual.ufro.cl/"
-                            className="text-[0.95rem] text-[#434a54] no-underline whitespace-nowrap transition-colors duration-150 hover:text-[#1f3b8a]"
-                        >
-                            Campus Virtual
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="https://intranet.ufro.cl/"
-                            className="text-[0.95rem] text-[#434a54] no-underline whitespace-nowrap transition-colors duration-150 hover:text-[#1f3b8a]"
-                        >
-                            Intranet
-                        </a>
-                    </li>
+                    {user ? (
+                        <>
+                            {/* --- Links de APP (Logueado) --- */}
+                            <li>
+                                <NavLink to="/" className={navLinkClasses}>
+                                    Inicio
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink to="/mis-reservas" className={navLinkClasses}>
+                                    Reservas
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink to="/" className={navLinkClasses}>
+                                    Salas de Estudio
+                                </NavLink>
+                            </li>
+                        </>
+                    ) : (
+                        <>
+                            {/* --- Links Públicos (No Logueado) --- */}
+                            <li>
+                                <a
+                                    href="https://www.ufro.cl/servicios-online/"
+                                    className="text-[0.95rem] text-[#434a54] no-underline whitespace-nowrap transition-colors duration-150 hover:text-[#1f3b8a]"
+                                >
+                                    Servicios Online
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="https://www.ufro.cl/"
+                                    className="text-[0.95rem] text-[#434a54] no-underline whitespace-nowrap transition-colors duration-150 hover:text-[#1f3b8a]"
+                                >
+                                    Universidad
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="https://campusvirtual.ufro.cl/"
+                                    className="text-[0.95rem] text-[#434a54] no-underline whitespace-nowrap transition-colors duration-150 hover:text-[#1f3b8a]"
+                                >
+                                    Campus Virtual
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="https://intranet.ufro.cl/"
+                                    className="text-[0.95rem] text-[#434a54] no-underline whitespace-nowrap transition-colors duration-150 hover:text-[#1f3b8a]"
+                                >
+                                    Intranet
+                                </a>
+                            </li>
+                        </>
+                    )}
                 </ul>
 
                 {/* --- Acciones (Botones) --- */}
