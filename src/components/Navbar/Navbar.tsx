@@ -6,7 +6,6 @@ import {
     HouseIcon,
     CalendarIcon,
     BooksIcon,
-    QuestionIcon,
     UserCircleIcon,
     CaretDownIcon,
     ListIcon,
@@ -84,10 +83,7 @@ export default function Navbar() {
 
                     {/* Acciones (Desktop) */}
                     <div className="hidden items-center justify-end gap-2 lg:flex lg:col-span-1 lg:justify-self-end">
-                        <button className={appNavLinkClasses({isActive: false})}>
-                            <QuestionIcon size={20} />
-                            Ayuda
-                        </button>
+
 
                         <div className="relative">
                             <button
@@ -187,12 +183,6 @@ export default function Navbar() {
                                 </button>
                             </div>
                         )}
-
-                        <button className={`${mobileNavLinkClasses({isActive: false})} w-full`}>
-                            <QuestionIcon size={22} />
-                            Ayuda
-                        </button>
-
                     </div>
                 </div>
             </nav>
@@ -223,7 +213,7 @@ export default function Navbar() {
                 >
                     <img src={logoUfro} alt="Logo" className="h-[53px] w-auto" />
                     <span className="text-xl font-bold text-[#002976]">
-                        BookFtera
+                        BookFrontera
                     </span>
                 </Link>
 
@@ -269,14 +259,6 @@ export default function Navbar() {
                 </ul>
 
                 <div className="flex items-center justify-self-end gap-4">
-                    <button
-                        type="button"
-                        className="border-0 bg-transparent px-3 py-2 text-[0.95rem] text-[#434a54] cursor-pointer transition-colors duration-150 hover:text-[#1f3b8a]"
-                        aria-haspopup="menu"
-                        aria-expanded="false"
-                    >
-                        Ayuda <span className="ml-1.5" aria-hidden="true">▾</span>
-                    </button>
                     <button
                         type="button"
                         onClick={openLoginModal}
