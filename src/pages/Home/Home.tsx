@@ -14,6 +14,7 @@ export default function Home() {
 
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { openLoginModal } = useAuth();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<{ roomId: string; slotId: string } | null>(null);
@@ -29,7 +30,7 @@ export default function Home() {
 
     const handleConfirmBooking = async () => {
         if (!user) {
-            navigate('/login');
+            openLoginModal();
             return;
         }
 

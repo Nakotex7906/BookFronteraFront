@@ -1,8 +1,15 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useEffect } from 'react';
 
 export const ProtectedRoute = () => {
-    const { user, isLoading } = useAuth();
+    const { user, isLoading, openLoginModal } = useAuth();
+
+    useEffect(() => {
+        if (!isLoading && !user) {
+            openLoginModal();
+        }
+    }, [isLoading, user, openLoginModal]);
 
     if (isLoading) {
         return (
@@ -13,10 +20,13 @@ export const ProtectedRoute = () => {
     }
 
     if (!user) {
-        // 3. Si NO está cargando Y NO hay usuario, redirige
-        return <Navigate to="/login" replace />;
+        // 3. SI NO HAY USUARIO:
+        // El Effect de arriba abrirá el modal.
+        // Mientras tanto, redirigimos al usuario a la página de inicio ('/')
+        // para que el modal aparezca SOBRE la página Home.
+        return <Navigate to="/" replace />;
     }
 
-    // 4. Si NO está cargando y SÍ hay usuario, muestra la página
+    // 4. Si hay usuario, muestra la página protegida
     return <Outlet />;
 };

@@ -7,11 +7,17 @@ interface User {
     nombre: string;
     rol: 'USER' | 'ADMIN';
 }
+
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     logout: () => void;
+
+    isLoginModalOpen: boolean;
+    openLoginModal: () => void;
+    closeLoginModal: () => void;
 }
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
@@ -22,8 +28,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
+    useEffect(() => {
         const fetchUser = async () => {
             try {
                 const response = await fetch(`${API_BASE}/users/me`, {
@@ -45,15 +52,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
 
         fetchUser();
-
     }, []);
 
     const logout = () => {
         window.location.href = `${API_BASE}/logout`;
     };
 
+    const openLoginModal = () => setIsLoginModalOpen(true);
+    const closeLoginModal = () => setIsLoginModalOpen(false);
+
     return (
-        <AuthContext.Provider value={{ user, isLoading, logout }}>
+        <AuthContext.Provider value={{
+            user,
+            isLoading,
+            logout,
+
+            isLoginModalOpen,
+            openLoginModal,
+            closeLoginModal
+        }}>
             {children}
         </AuthContext.Provider>
     );

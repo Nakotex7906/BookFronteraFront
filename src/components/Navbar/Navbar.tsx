@@ -14,7 +14,7 @@ import {
 } from "@phosphor-icons/react";
 
 export default function Navbar() {
-    const { user, isLoading, logout } = useAuth();
+    const { user, isLoading, logout, openLoginModal } = useAuth();
 
     // AÑADIR LOS ESTADOS PARA LOS TRES MENÚS
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -277,13 +277,13 @@ export default function Navbar() {
                     >
                         Ayuda <span className="ml-1.5" aria-hidden="true">▾</span>
                     </button>
-
-                    <Link
-                        to="/login"
+                    <button
+                        type="button"
+                        onClick={openLoginModal}
                         className={`px-[18px] py-[10px] text-sm font-medium text-white bg-[#1b66e5] border-0 rounded-lg cursor-pointer transition-all duration-150 hover:bg-[#1556c4] active:translate-y-px`}
                     >
                         Iniciar sesión
-                    </Link>
+                    </button>
                 </div>
             </div>
         </nav>
