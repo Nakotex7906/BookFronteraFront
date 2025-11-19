@@ -1,4 +1,4 @@
-import { useMemo, useState} from "react";
+import { useMemo, useState } from "react";
 import type { Room } from "../../types/room";
 import type { TimeSlot, Availability } from "../../types/schedule";
 
@@ -9,6 +9,7 @@ type Props = {
     onSelect: (roomId: string, slotId: string) => void;
 };
 
+// Función auxiliar para ordenar slots por hora
 const toMinutes = (id: string) => {
     const [from] = id.split("-");
     const [hh, mm = "00"] = from.split(":");
@@ -23,18 +24,13 @@ export default function AvailabilityGrid({ rooms, slots, data, onSelect }: Props
         [slots]
     );
 
+    // Cambie '1fr' por '140px'
+    // Esto obliga a que el título y la celda midan SIEMPRE lo mismo.
+    // 250px para el nombre de la sala (columna fija a la izquierda)
     const gridTemplate = useMemo(
-        () => `240px repeat(${sortedSlots.length}, 1fr)`,
+        () => `250px repeat(${sortedSlots.length}, 140px)`,
         [sortedSlots.length]
     );
-
-    // 2. Lógica de min-width movida aquí desde el CSS para Tailwind
-    // (Tu CSS usaba max-width, así que invertimos para mobile-first de Tailwind)
-    const gridMinWClasses = `
-      min-w-[calc(160px+${sortedSlots.length}*80px)]
-      md:min-w-[calc(200px+${sortedSlots.length}*90px)]
-      lg:min-w-[calc(240px+${sortedSlots.length}*100px)]
-    `;
 
     const isAvailable = (roomId: string | number, slotId: string) =>
         data.some(
@@ -47,87 +43,75 @@ export default function AvailabilityGrid({ rooms, slots, data, onSelect }: Props
         onSelect(roomId, slotId);
     };
 
-    // 3. Clases base de Tailwind para la celda
     const cellBaseClasses =
-        "block w-full h-8 rounded-lg border-none cursor-pointer transition-all duration-75 ease-out hover:enabled:scale-[0.98] focus-visible:outline-offset-2 focus-visible:outline-3 focus-visible:outline-[#91caff] aria-disabled:cursor-not-allowed aria-disabled:opacity-90";
+        "block w-full h-10 rounded-lg border-none cursor-pointer transition-all duration-75 ease-out hover:enabled:scale-[0.98] focus-visible:outline-offset-2 focus-visible:outline-3 focus-visible:outline-[#91caff] aria-disabled:cursor-not-allowed aria-disabled:opacity-90";
 
     return (
-        // 4. Todas las clases de `styles.wrapper` reemplazadas
-        <div className="w-full overflow-x-auto overflow-y-hidden">
+        <div className="w-full overflow-x-auto pb-4">
             <div
-                // 5. Clases de `styles.grid` + `min-width` dinámico
-                className={`bg-white rounded-xl shadow-lg mx-auto mb-4 p-4 ${gridMinWClasses}`}
-                // `style={cssVars}` ya no es necesario
+                // 'w-max': El ancho será igual a la suma de todas las columnas (no se corta).
+                // 'min-w-full': Si hay pocas columnas, ocupa al menos toda la pantalla.
+                className="bg-white rounded-xl shadow-lg mx-auto p-4 w-max min-w-full"
             >
                 {/* Header */}
                 <div
-                    // 6. Clases de `styles.header`
-                    className="grid items-center gap-x-3.5 border-b-2 border-[#e9ecef] pb-2.5"
+                    className="grid items-center gap-x-4 border-b-2 border-[#e9ecef] pb-4 mb-4"
                     style={{ gridTemplateColumns: gridTemplate }}
                 >
-                    <span
-                        // 7. Clases de `styles.headCell` + `first-child`
-                        className="font-bold text-[.85rem] text-[#495057] text-center whitespace-nowrap first:text-left first:pl-1.5"
-                    >
+                    <span className="font-bold text-[.85rem] text-[#495057] whitespace-nowrap pl-2">
                         SALA (CAPACIDAD)
                     </span>
                     {sortedSlots.map((s) => (
                         <span
                             key={s.id}
-                            className="font-bold text-[.85rem] text-[#495057] text-center whitespace-nowrap first:text-left first:pl-1.5"
+                            // 'text-center' asegura que el texto del horario quede alineado con el bloque
+                            className="font-bold text-[.80rem] text-[#495057] text-center whitespace-nowrap px-1"
                         >
                             {s.label}
                         </span>
                     ))}
                 </div>
 
-                {/* Filas */}
+                {/* Filas de Salas */}
                 {rooms.map((room) => (
                     <div
                         key={room.id}
-                        // 8. Clases de `styles.row` + `last-child`
-                        className="grid items-center gap-x-3.5 py-3 border-b border-[#f1f3f5] last:border-b-0"
+                        className="grid items-center gap-x-4 py-3 border-b border-[#f1f3f5] last:border-b-0 hover:bg-gray-50 transition-colors"
                         style={{ gridTemplateColumns: gridTemplate }}
                         role="row"
                     >
-                        <span
-                            // 9. Clases de `styles.roomCell`
-                            className="font-semibold text-[#212529] whitespace-nowrap"
-                        >
+                        {/* Nombre de la Sala */}
+                        <span className="font-semibold text-[#212529] whitespace-nowrap pl-2 text-sm">
                             {room.name} ({room.capacity})
                         </span>
 
+                        {/* Botones (Celdas) */}
                         {sortedSlots.map((slot) => {
                             const available = isAvailable(room.id, slot.id);
                             const isSelected =
                                 selected?.roomId === String(room.id) && selected?.slotId === slot.id;
 
-                            // 10. Lógica de clases movida a Tailwind
                             const cellStateClasses = isSelected
-                                ? "bg-[#1890ff] shadow-[0_0_0_3px_rgba(24,144,255,.25)]" // .selected
+                                ? "bg-[#1890ff] shadow-[0_0_0_3px_rgba(24,144,255,.25)]"
                                 : available
-                                    ? "bg-[#69bc41]" // .available
-                                    : "bg-[#f5222d]"; // .unavailable
+                                    ? "bg-[#69bc41]"
+                                    : "bg-[#f5222d]";
 
                             return (
-                                <button
-                                    key={slot.id}
-                                    // 11. Se combinan las clases base y las de estado
-                                    className={`${cellBaseClasses} ${cellStateClasses}`}
-                                    role="gridcell"
-                                    type="button"
-                                    onClick={() =>
-                                        handleClick(String(room.id), slot.id, available)
-                                    }
-                                    aria-disabled={!available}
-                                    aria-label={`${room.name}, ${slot.label}: ${
-                                        isSelected
-                                            ? "Seleccionado"
-                                            : available
-                                                ? "Disponible"
-                                                : "No disponible"
-                                    }`}
-                                />
+                                <div key={slot.id} className="px-1"> {/* Padding extra para separar visualmente los bloques */}
+                                    <button
+                                        className={`${cellBaseClasses} ${cellStateClasses}`}
+                                        role="gridcell"
+                                        type="button"
+                                        onClick={() =>
+                                            handleClick(String(room.id), slot.id, available)
+                                        }
+                                        disabled={!available}
+                                        title={`${room.name}, ${slot.label}: ${
+                                            isSelected ? "Seleccionado" : available ? "Disponible" : "No disponible"
+                                        }`}
+                                    />
+                                </div>
                             );
                         })}
                     </div>
