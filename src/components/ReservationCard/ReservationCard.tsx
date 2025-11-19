@@ -46,7 +46,7 @@ const ActionButtons = ({ isCancelling, handleCancelClick, isVertical = false }: 
             className={`${btnModify} ${isVertical ? 'w-full' : ''}`}
             disabled={true}
         >
-            <span className="material-symbols-outlined text-base">edit</span>
+            <span className="material-symbols-outlined text-base"></span>
             <span>Modificar</span>
         </button>
         <button
@@ -54,7 +54,7 @@ const ActionButtons = ({ isCancelling, handleCancelClick, isVertical = false }: 
             onClick={handleCancelClick}
             disabled={isCancelling}
         >
-            <span className="material-symbols-outlined text-base">cancel</span>
+            <span className="material-symbols-outlined text-base"></span>
             <span>{isCancelling ? "Cancelando..." : "Cancelar"}</span>
         </button>
     </div>
