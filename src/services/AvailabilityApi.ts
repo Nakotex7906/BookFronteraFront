@@ -1,8 +1,6 @@
 import { http } from "./http";
-import type { Room } from "../types/room";
 import type {
-    TimeSlot,
-    Availability,
+    DailyAvailabilityResponse,
     ReservationRequest,
     ReservationResponse,
     MyReservationsResponse,
@@ -11,7 +9,6 @@ import { AxiosError } from "axios";
 
 function errorMessage(e: unknown): string {
     if (e instanceof AxiosError) {
-        // Intenta leer un mensaje de error del backend
         const msg =
             (e.response?.data as any)?.message ??
             (e.response?.data as any)?.error ??
@@ -22,30 +19,13 @@ function errorMessage(e: unknown): string {
 }
 
 export class AvailabilityApi {
-    static async getRooms(signal?: AbortSignal): Promise<Room[]> {
-        try {
-            const { data } = await http.get<Room[]>("rooms", { signal });
-            return data;
-        } catch (e) {
-            throw new Error(errorMessage(e));
-        }
-    }
-
-    static async getSlots(signal?: AbortSignal): Promise<TimeSlot[]> {
-        try {
-            const { data } = await http.get<TimeSlot[]>("slots", { signal });
-            return data;
-        } catch (e) {
-            throw new Error(errorMessage(e));
-        }
-    }
-
+    // Debe retornar Promise<DailyAvailabilityResponse>
     static async getAvailability(
         date: string,
         signal?: AbortSignal
-    ): Promise<Availability[]> {
+    ): Promise<DailyAvailabilityResponse> {
         try {
-            const { data } = await http.get<Availability[]>("/availability", {
+            const { data } = await http.get<DailyAvailabilityResponse>("/availability", {
                 params: { date },
                 signal,
             });
@@ -69,9 +49,6 @@ export class AvailabilityApi {
         }
     }
 
-    /**
-     * Obtiene las reservas del usuario autenticado.
-     */
     static async getMyReservations(): Promise<MyReservationsResponse> {
         try {
             const { data } = await http.get<MyReservationsResponse>("/reservations/my-reservations");
@@ -81,9 +58,6 @@ export class AvailabilityApi {
         }
     }
 
-    /**
-     * Cancela una reserva por su ID.
-     */
     static async cancelReservation(id: number): Promise<void> {
         try {
             await http.delete(`/reservations/${id}`);
@@ -91,5 +65,4 @@ export class AvailabilityApi {
             throw new Error(errorMessage(e));
         }
     }
-
 }

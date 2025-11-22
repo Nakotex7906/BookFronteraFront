@@ -7,6 +7,7 @@ import ReservationSuccess from "../pages/ReservationSuccess/ReservationSuccess";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import MyReservations from "../pages/MyReservations/MyReservations";
 import { LoginModal } from "../components/LoginModal";
+import StudyRooms from "../pages/StudyRooms/StudyRooms.tsx";
 
 function AppLayout() {
     const location = useLocation();
@@ -30,6 +31,7 @@ function AppLayout() {
                 {/* --- Rutas Protegidas --- */}
                 <Route element={<ProtectedRoute />}>
                     <Route path="/mis-reservas" element={<MyReservations />} />
+                    <Route path="/salas-de-estudio" element={<StudyRooms />} />
                 </Route>
 
             </Routes>
