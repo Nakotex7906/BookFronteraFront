@@ -7,36 +7,40 @@ import ReservationSuccess from "../pages/ReservationSuccess/ReservationSuccess";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import MyReservations from "../pages/MyReservations/MyReservations";
 import { LoginModal } from "../components/LoginModal";
-import StudyRooms from "../pages/StudyRooms/StudyRooms.tsx";
+import StudyRooms from "../pages/StudyRooms/StudyRooms";
 
 function AppLayout() {
     const location = useLocation();
 
-    const noNavFooterPaths = ["/reservation-success"];
+    // Define aquí rutas donde NO quieras ver el Navbar/Footer
+    const noNavFooterPaths: string[] = [];
     const showNavFooter = !noNavFooterPaths.includes(location.pathname);
 
     return (
-        <>
+        // 1. Contenedor principal: Ocupa al menos el 100% de la altura de la ventana
+        <div className="flex min-h-screen flex-col bg-[#f4f6f9]">
+
             {showNavFooter && <Navbar />}
+
             <LoginModal />
 
-            <Routes>
-                {/* --- Rutas Públicas --- */}
-                <Route path="/" element={<Home />} />
-                <Route
-                    path="/reservation-success"
-                    element={<ReservationSuccess />}
-                />
+            <div className="flex flex-grow flex-col">
+                <Routes>
+                    {/* --- Rutas Públicas --- */}
+                    <Route path="/" element={<Home />} />
 
-                {/* --- Rutas Protegidas --- */}
-                <Route element={<ProtectedRoute />}>
-                    <Route path="/mis-reservas" element={<MyReservations />} />
-                    <Route path="/salas-de-estudio" element={<StudyRooms />} />
-                </Route>
+                    {/* --- Rutas Protegidas --- */}
+                    <Route element={<ProtectedRoute />}>
+                        <Route path="/mis-reservas" element={<MyReservations />} />
+                        <Route path="/salas-de-estudio" element={<StudyRooms />} />
+                        <Route path="/reservation-success" element={<ReservationSuccess />} />
+                    </Route>
+                </Routes>
+            </div>
 
-            </Routes>
+            {/* El footer se renderiza al final del flex container */}
             {showNavFooter && <Footer />}
-        </>
+        </div>
     );
 }
 
