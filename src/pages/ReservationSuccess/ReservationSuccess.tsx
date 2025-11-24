@@ -1,101 +1,131 @@
-import React, { useMemo } from "react";
+import React from "react";
+import { Link } from "react-router-dom";
+import { CheckCircleIcon, CalendarCheckIcon, HouseIcon } from "@phosphor-icons/react";
 import type { Props } from "../../types/Props.ts";
 
 /**
- * Pantalla de confirmación de reserva.
+ * Pantalla de confirmación de reserva exitosa.
+ *
+ * Muestra los detalles de la reserva recién creada y ofrece opciones de navegación
+ * para ir al listado de reservas o volver al inicio.
+ *
+ * @component
+ * @param props - Propiedades del componente (roomId, startISO, endISO).
  */
 const ReservationSuccess: React.FC<Props> = ({
                                                  roomId,
                                                  startISO,
                                                  endISO,
                                              }) => {
-    const params = useMemo(() => new URLSearchParams(window.location.search), []);
-    const room = roomId ?? params.get("room") ?? "SL-201";
-    const startStr = startISO ?? params.get("start") ?? "2024-07-23T10:00:00-04:00";
-    const endStr = endISO ?? params.get("end") ?? "2024-07-23T11:00:00-04:00";
+    // Obtenemos los parámetros de la URL directamente
+    const params = new URLSearchParams(window.location.search);
 
-    const start = useMemo(() => new Date(startStr), [startStr]);
-    const end = useMemo(() => new Date(endStr), [endStr]);
+    // Definimos las variables base
+    const roomName = roomId ?? params.get("room") ?? "Sala Desconocida";
+    const startString = startISO ?? params.get("start") ?? new Date().toISOString();
+    const endString = endISO ?? params.get("end") ?? new Date().toISOString();
 
-    const formatDateLong = (d: Date) =>
+    // Creamos las fechas
+    const startDate = new Date(startString);
+    const endDate = new Date(endString);
+
+    /**
+     * Formatea la fecha en un formato largo legible en español.
+     * Ejemplo: "miércoles, 23 de julio de 2024"
+     * @param date - Fecha a formatear.
+     */
+    const formatDateLong = (date: Date): string =>
         new Intl.DateTimeFormat("es-CL", {
             weekday: "long",
             day: "2-digit",
             month: "long",
             year: "numeric",
-        }).format(d);
+        }).format(date);
 
-    const formatHour = (d: Date) =>
+    /**
+     * Formatea la hora en formato de 12 horas.
+     * Ejemplo: "10:00 a. m."
+     * @param date - Fecha de la cual extraer la hora.
+     */
+    const formatHour = (date: Date): string =>
         new Intl.DateTimeFormat("es-CL", {
             hour: "numeric",
             minute: "2-digit",
             hour12: true,
-        }).format(d);
+        }).format(date);
+
+    // Clases CSS reutilizables
+    const buttonBaseClass = "flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 active:scale-[0.98]";
+    const primaryButtonClass = "bg-[#0a3fa6] text-white hover:bg-[#072d78] shadow-md hover:shadow-lg";
+    const secondaryButtonClass = "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300";
 
     return (
-        // .page
         <main className="min-h-screen grid place-items-center bg-[#f4f6f9] p-6">
-            {/* .card */}
             <section
-                className="w-full max-w-[720px] rounded-2xl border border-[#eef2f7] bg-white p-[40px_44px_28px] text-center shadow-[0_10px_30px_rgba(2,6,23,.08)]"
+                className="w-full max-w-[600px] rounded-2xl border border-[#eef2f7] bg-white p-8 text-center shadow-[0_10px_30px_rgba(2,6,23,.08)] md:p-10"
                 role="status"
                 aria-live="polite"
             >
-                {/* .iconWrap */}
-                <div className="grid place-items-center mb-3" aria-hidden="true">
-                    {/* .icon */}
-                    <svg className="h-[76px] w-[76px]" viewBox="0 0 48 48">
-                        <circle
-                            cx="24"
-                            cy="24"
-                            r="22"
-                            className="fill-[#e6f0ff] stroke-[#bdd2ff] stroke-2" // .iconBg
+                {/* Icono de Éxito */}
+                <div className="mb-6 flex justify-center">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 ring-8 ring-blue-50/50">
+                        <CheckCircleIcon
+                            size={48}
+                            weight="fill"
+                            className="text-[#0ea5e9]"
                         />
-                        <path
-                            className="fill-[#0ea5e9]" // .iconCheck
-                            d="M34.6 17.8a1.5 1.5 0 0 1 0 2.1l-12 12a1.5 1.5 0 0 1-2.1 0l-6-6a1.5 1.5 0 0 1 2.1-2.1l4.9 4.9 10.9-10.9a1.5 1.5 0 0 1 2.2 0z"
-                        />
-                    </svg>
+                    </div>
                 </div>
 
-                {/* .title */}
-                <h1 className="my-1.5 text-3xl font-extrabold leading-[1.2] text-[#0f172a] md:text-[32px]">
+                {/* Títulos */}
+                <h1 className="mb-3 text-3xl font-extrabold text-[#0f172a] md:text-4xl tracking-tight">
                     ¡Reserva Confirmada!
                 </h1>
 
-                {/* .lead */}
-                <p className="mx-auto mb-[18px] max-w-[52ch] text-base text-[#64748b]">
-                    ¡Has reservado la sala <strong>{room}</strong> en el{" "}
-                    <strong>{formatDateLong(start)}</strong> a las{" "}
-                    <strong>{formatHour(start)}</strong>!
+                <p className="mx-auto mb-8 max-w-[45ch] text-lg text-[#64748b] leading-relaxed">
+                    Has reservado la sala <strong className="text-[#0f172a]">{roomName}</strong> exitosamente.
                 </p>
 
-                {/* .hr */}
-                <hr className="my-4 border-0 border-t border-[#e5e7eb]" />
+                {/* Detalles de la Reserva */}
+                <div className="mb-8 rounded-xl bg-gray-50 p-5 border border-gray-100">
+                    <dl className="grid gap-3 text-left">
+                        <div className="flex items-center justify-between text-[0.95rem]">
+                            <dt className="text-gray-500 font-medium">Fecha:</dt>
+                            <dd className="font-bold text-[#0f172a] capitalize">
+                                {formatDateLong(startDate)}
+                            </dd>
+                        </div>
+                        <div className="flex items-center justify-between text-[0.95rem]">
+                            <dt className="text-gray-500 font-medium">Horario:</dt>
+                            <dd className="font-bold text-[#0f172a]">
+                                {formatHour(startDate)} - {formatHour(endDate)}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
 
-                {/* .details */}
-                <dl className="mb-[18px] grid gap-2.5 text-left">
-                    {/* .row */}
-                    <div className="flex items-center justify-between py-1.5 text-[0.975rem]">
-                        <dt className="text-[#64748b]">Sala:</dt>
-                        <dd className="m-0 font-bold text-[#0f172a]">{room}</dd>
-                    </div>
-                    <div className="flex items-center justify-between py-1.5 text-[0.975rem]">
-                        <dt className="text-[#64748b]">Fecha:</dt>
-                        <dd className="m-0 font-bold text-[#0f172a]">{formatDateLong(start)}</dd>
-                    </div>
-                    <div className="flex items-center justify-between py-1.5 text-[0.975rem]">
-                        <dt className="text-[#64748b]">Hora:</dt>
-                        <dd className="m-0 font-bold text-[#0f172a]">
-                            {formatHour(start)} - {formatHour(end)}
-                        </dd>
-                    </div>
-                </dl>
+                {/* --- Botones de Acción --- */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                    <Link
+                        to="/mis-reservas"
+                        className={`${buttonBaseClass} ${primaryButtonClass}`}
+                    >
+                        <CalendarCheckIcon size={20} weight="bold" />
+                        Ir a Mis Reservas
+                    </Link>
 
-                {/* .note */}
-                <p className="mx-auto mt-4 max-w-[60ch] text-[0.9rem] text-[#64748b]">
-                    Si necesitas cancelar o modificar tu reserva, puedes hacerlo desde la
-                    sección <strong>“Mis Reservas”</strong>.
+                    <Link
+                        to="/"
+                        className={`${buttonBaseClass} ${secondaryButtonClass}`}
+                    >
+                        <HouseIcon size={20} weight="bold" />
+                        Volver al Inicio
+                    </Link>
+                </div>
+
+                {/* Nota al pie */}
+                <p className="mt-8 text-sm text-gray-400">
+                    Puedes cancelar o modificar tu reserva desde la sección "Mis Reservas".
                 </p>
             </section>
         </main>
