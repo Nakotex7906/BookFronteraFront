@@ -195,20 +195,12 @@ export default function Navbar() {
     // RENDERIZADO DE LA <PublicNavbar> (SI NO ESTÁ LOGUEADO)
     return (
         <nav
-            className="sticky top-0 z-[100] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)]
-                       after:content-[''] after:block after:h-1
-                       after:bg-gradient-to-r after:from-[#0d3398] after:to-[#2b73ff]"
+            className="sticky top-0 z-[100] w-full bg-white shadow-lg"
             role="navigation"
             aria-label="Principal"
         >
-            <div
-                className="
-                    mx-auto h-[70px] max-w-[1600px] overflow-hidden
-                    grid grid-cols-[1fr_auto] items-center gap-4 px-6
-                    lg:grid-cols-[auto_1fr_auto]
-                    xl:grid-cols-[250px_1fr_250px] xl:gap-6
-                "
-            >
+            <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 p-4 lg:grid lg:grid-cols-3">
+
                 <Link
                     to="/"
                     className="inline-flex items-center gap-2.5 justify-self-start no-underline transition-opacity duration-200 hover:opacity-90"
