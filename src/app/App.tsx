@@ -8,6 +8,9 @@ import { ProtectedRoute } from "../components/ProtectedRoute";
 import MyReservations from "../pages/MyReservations/MyReservations";
 import { LoginModal } from "../components/LoginModal";
 import StudyRooms from "../pages/StudyRooms/StudyRooms";
+import TeamStudyInfo from "../pages/info/TeamStudyInfo.tsx";
+import TimeManagementInfo from "../pages/info/TimeManagementInfo.tsx";
+import EquipmentInfo from "../pages/info/EquipmentInfo.tsx";
 
 function AppLayout() {
     const location = useLocation();
@@ -28,6 +31,10 @@ function AppLayout() {
                 <Routes>
                     {/* --- Rutas Públicas --- */}
                     <Route path="/" element={<Home />} />
+                    {/* RUTAS DE INFORMACIÓN */}
+                    <Route path="/info/equipo" element={<TeamStudyInfo />} />
+                    <Route path="/info/tiempo" element={<TimeManagementInfo />} />
+                    <Route path="/info/equipamiento" element={<EquipmentInfo />} />
 
                     {/* --- Rutas Protegidas --- */}
                     <Route element={<ProtectedRoute />}>
