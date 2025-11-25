@@ -54,9 +54,12 @@ export default function Navbar() {
                     {/* Logo (Izquierda) */}
                     <Link
                         to="/"
-                        className="text-xl font-bold text-[#002976] no-underline lg:col-span-1"
+                        className="inline-flex items-center gap-2.5 justify-self-start no-underline transition-opacity duration-200 hover:opacity-90"
                     >
+                        <img src={logoUfro} alt="Logo" className="h-[53px] w-auto" />
+                        <span className="text-xl font-bold text-[#002976]">
                         BookFrontera
+                    </span>
                     </Link>
 
                     {/*Links de la App (Oculto en celular) */}
@@ -92,7 +95,7 @@ export default function Navbar() {
                             >
                                 <UserCircleIcon size={20} />
                                 <span className="max-w-[100px] truncate">
-                                    {user.nombre}
+                                    {user.nombre.split(' ')[0]}
                                 </span>
                                 <CaretDownIcon size={16} />
                             </button>
