@@ -47,75 +47,99 @@ export default function AvailabilityGrid({ rooms, slots, data, onSelect }: Props
         "block w-full h-10 rounded-lg border-none cursor-pointer transition-all duration-75 ease-out hover:enabled:scale-[0.98] focus-visible:outline-offset-2 focus-visible:outline-3 focus-visible:outline-[#91caff] aria-disabled:cursor-not-allowed aria-disabled:opacity-90";
 
     return (
-        <div className="w-full overflow-x-auto pb-4">
-            <div
-                // 'w-max': El ancho será igual a la suma de todas las columnas (no se corta).
-                // 'min-w-full': Si hay pocas columnas, ocupa al menos toda la pantalla.
-                className="bg-white rounded-xl shadow-lg mx-auto p-4 w-max min-w-full"
+        <div className="w-full rounded-xl bg-white shadow-lg overflow-hidden border border-gray-100">
+            <div className="w-full overflow-x-auto
+                /* 1. Tamaño del scrollbar */
+                /* En tu CSS tenías 'height: 10px'. Agregué 'w-[10px]' para que funcione si el scroll es vertical */
+                [&::-webkit-scrollbar]:w-[10px]
+                [&::-webkit-scrollbar]:h-[12px]
+
+                /* 2. Estilos del Track (Riel) */
+                [&::-webkit-scrollbar-track]:bg-transparent
+                [&::-webkit-scrollbar-track]:m-[0_16px]
+
+                /* 3. Estilos del Thumb (Barra) */
+                [&::-webkit-scrollbar-thumb]:bg-[#dcdcdc]
+                [&::-webkit-scrollbar-thumb]:rounded-[12px]
+
+                /* El truco del borde para simular espacio */
+                [&::-webkit-scrollbar-thumb]:border-[3px]
+                [&::-webkit-scrollbar-thumb]:border-solid
+                [&::-webkit-scrollbar-thumb]:border-white
+                [&::-webkit-scrollbar-thumb]:bg-clip-content
+
+                /* 4. Estilos Hover */
+                [&::-webkit-scrollbar-thumb:hover]:bg-[#cbcbcb]"
             >
-                {/* Header */}
+
                 <div
-                    className="grid items-center gap-x-4 border-b-2 border-[#e9ecef] pb-4 mb-4"
-                    style={{ gridTemplateColumns: gridTemplate }}
+                    // 'w-max': El ancho será igual a la suma de todas las columnas (no se corta).
+                    // 'min-w-full': Si hay pocas columnas, ocupa al menos toda la pantalla.
+                    className="p-4 w-max min-w-full"
                 >
-                    <span className="font-bold text-[.85rem] text-[#495057] whitespace-nowrap pl-2">
-                        SALA (CAPACIDAD)
-                    </span>
-                    {sortedSlots.map((s) => (
-                        <span
-                            key={s.id}
-                            // 'text-center' asegura que el texto del horario quede alineado con el bloque
-                            className="font-bold text-[.80rem] text-[#495057] text-center whitespace-nowrap px-1"
-                        >
-                            {s.label}
+                    {/* Header */}
+                    <div
+                        className="grid items-center gap-x-4 border-b-2 border-[#e9ecef] pb-4 mb-4"
+                        style={{ gridTemplateColumns: gridTemplate }}
+                    >
+                        <span className="font-bold text-[.85rem] text-[#495057] whitespace-nowrap pl-2">
+                            SALA (CAPACIDAD)
                         </span>
+                        {sortedSlots.map((s) => (
+                            <span
+                                key={s.id}
+                                // 'text-center' asegura que el texto del horario quede alineado con el bloque
+                                className="font-bold text-[.80rem] text-[#495057] text-center whitespace-nowrap px-1"
+                            >
+                                {s.label}
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* Filas de Salas */}
+                    {rooms.map((room) => (
+                        <div
+                            key={room.id}
+                            className="grid items-center gap-x-4 py-3 border-b border-[#f1f3f5] last:border-b-0 hover:bg-gray-50 transition-colors"
+                            style={{ gridTemplateColumns: gridTemplate }}
+                            role="row"
+                        >
+                            {/* Nombre de la Sala */}
+                            <span className="font-semibold text-[#212529] whitespace-nowrap pl-2 text-sm">
+                                {room.name} ({room.capacity})
+                            </span>
+
+                            {/* Botones (Celdas) */}
+                            {sortedSlots.map((slot) => {
+                                const available = isAvailable(room.id, slot.id);
+                                const isSelected =
+                                    selected?.roomId === String(room.id) && selected?.slotId === slot.id;
+
+                                const cellStateClasses = isSelected
+                                    ? "bg-[#1890ff] shadow-[0_0_0_3px_rgba(24,144,255,.25)]"
+                                    : available
+                                        ? "bg-[#69bc41]"
+                                        : "bg-[#f5222d]";
+
+                                return (
+                                    <div key={slot.id} className="px-1"> {/* Padding extra para separar visualmente los bloques */}
+                                        <button
+                                            className={`${cellBaseClasses} ${cellStateClasses}`}
+                                            role="gridcell"
+                                            type="button"
+                                            onClick={() =>
+                                                handleClick(String(room.id), slot.id, available)
+                                            }
+                                            disabled={!available}
+                                            title={`${room.name}, ${slot.label}: ${isSelected ? "Seleccionado" : available ? "Disponible" : "No disponible"
+                                            }`}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
                     ))}
                 </div>
-
-                {/* Filas de Salas */}
-                {rooms.map((room) => (
-                    <div
-                        key={room.id}
-                        className="grid items-center gap-x-4 py-3 border-b border-[#f1f3f5] last:border-b-0 hover:bg-gray-50 transition-colors"
-                        style={{ gridTemplateColumns: gridTemplate }}
-                        role="row"
-                    >
-                        {/* Nombre de la Sala */}
-                        <span className="font-semibold text-[#212529] whitespace-nowrap pl-2 text-sm">
-                            {room.name} ({room.capacity})
-                        </span>
-
-                        {/* Botones (Celdas) */}
-                        {sortedSlots.map((slot) => {
-                            const available = isAvailable(room.id, slot.id);
-                            const isSelected =
-                                selected?.roomId === String(room.id) && selected?.slotId === slot.id;
-
-                            const cellStateClasses = isSelected
-                                ? "bg-[#1890ff] shadow-[0_0_0_3px_rgba(24,144,255,.25)]"
-                                : available
-                                    ? "bg-[#69bc41]"
-                                    : "bg-[#f5222d]";
-
-                            return (
-                                <div key={slot.id} className="px-1"> {/* Padding extra para separar visualmente los bloques */}
-                                    <button
-                                        className={`${cellBaseClasses} ${cellStateClasses}`}
-                                        role="gridcell"
-                                        type="button"
-                                        onClick={() =>
-                                            handleClick(String(room.id), slot.id, available)
-                                        }
-                                        disabled={!available}
-                                        title={`${room.name}, ${slot.label}: ${
-                                            isSelected ? "Seleccionado" : available ? "Disponible" : "No disponible"
-                                        }`}
-                                    />
-                                </div>
-                            );
-                        })}
-                    </div>
-                ))}
             </div>
         </div>
     );
