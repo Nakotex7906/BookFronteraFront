@@ -45,7 +45,7 @@ function AppLayout() {
                         {/* 2. RUTA DE ADMIN PANEL */}
                         {/* Al estar dentro de ProtectedRoute, requiere login.
                             Adicionalmente, el Navbar oculta el enlace si no eres ADMIN.
-                            El backend rechazará las peticiones de datos si no eres ADMIN. */}
+                            El backend rechazará las peticiones de datos si no se es ADMIN. */}
                         <Route path="/admin/panel" element={<AdminPanelPage />} />
                     </Route>
                 </Routes>

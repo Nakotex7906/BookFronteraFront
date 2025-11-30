@@ -1,114 +1,232 @@
-import { MagnifyingGlassIcon } from '@phosphor-icons/react';
+// src/pages/AdminPanelPage.tsx
+import { useEffect, useState } from 'react';
+import {
+    MagnifyingGlassIcon,
+    Plus,
+    PencilSimpleLine,
+    Trash,
+    Monitor,
+    Chalkboard,
+    WarningCircle,
+    Desktop
+} from '@phosphor-icons/react';
+import { RoomApi, type Room, type RoomDto } from '../../services/RoomApi';
+import RoomModal from '../../components/Admin/RoomModal';
 
-// Datos Mock basados en tu imagen
-const mockRooms = [
-    { id: 1, name: 'Sala de Estudio A', capacity: 10, resources: 'Proyector, Pizarra', status: 'active' },
-    { id: 2, name: 'Sala de Estudio B', capacity: 6, resources: 'Pizarra', status: 'disabled', disabledUntil: '25/12/2024' },
-    { id: 3, name: 'Sala de Estudio C', capacity: 12, resources: 'Proyector, Sonido', status: 'active' },
-    { id: 4, name: 'Sala de Estudio D', capacity: 8, resources: 'Ninguno', status: 'active' },
-    { id: 5, name: 'Sala de Estudio E', capacity: 4, resources: 'Pizarra', status: 'active' },
-];
+// Helper para iconos de recursos
+const ResourceIcon = ({ name }: { name: string }) => {
+    const n = name.toLowerCase();
+    if (n.includes('proyector') || n.includes('pantalla')) return <Monitor size={16} className="text-gray-500"/>;
+    if (n.includes('pc') || n.includes('computador')) return <Desktop size={16} className="text-gray-500"/>;
+    if (n.includes('pizarra')) return <Chalkboard size={16} className="text-gray-500"/>;
+    return <WarningCircle size={16} className="text-gray-300"/>;
+}
 
 const AdminPanelPage = () => {
+    const [rooms, setRooms] = useState<Room[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // Estados del Modal
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingRoom, setEditingRoom] = useState<RoomDto | null>(null);
+
+    // Cargar salas al montar
+    const loadRooms = async () => {
+        setIsLoading(true);
+        try {
+            const data = await RoomApi.getAll();
+            setRooms(data);
+        } catch (error) {
+            console.error("Error cargando salas:", error);
+            // Aquí podrías mostrar un toast de error
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadRooms();
+    }, []);
+
+    // Filtrado en cliente
+    const filteredRooms = rooms.filter(r =>
+        r.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Manejadores
+    const handleCreate = () => {
+        setEditingRoom(null);
+        setIsModalOpen(true);
+    };
+
+    const handleEdit = (room: Room) => {
+        setEditingRoom({
+            id: room.id,
+            name: room.name,
+            capacity: room.capacity,
+            floor: room.floor,
+            equipment: room.equipment
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async (id: number) => {
+        if (window.confirm("¿Estás seguro de eliminar esta sala? Esta acción es irreversible.")) {
+            try {
+                await RoomApi.delete(id);
+                loadRooms(); // Recargar lista
+            } catch (error) {
+                alert("Error al eliminar la sala.");
+            }
+        }
+    };
+
+    const handleSave = async (roomData: RoomDto) => {
+        if (roomData.id) {
+            await RoomApi.update(roomData.id, roomData);
+        } else {
+            await RoomApi.create(roomData);
+        }
+        loadRooms(); // Recargar lista tras guardar
+    };
+
     return (
-        <main className="min-h-screen bg-white p-6 md:p-12 font-sans text-gray-800">
+        <main className="min-h-screen bg-[#f4f6f9] p-6 md:p-12 font-sans text-gray-800">
             <div className="mx-auto max-w-6xl">
 
                 {/* HEADER */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-extrabold text-[#1f2937] mb-2 tracking-tight">
-                        Gestión de Salas
-                    </h1>
-                    <p className="text-gray-500">
-                        Administra las salas de estudio disponibles para los estudiantes.
-                    </p>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-[#1f2937] mb-2 tracking-tight">
+                            Gestión de Salas
+                        </h1>
+                        <p className="text-gray-500 text-lg">
+                            Panel de administración de espacios físicos.
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleCreate}
+                        className="flex items-center gap-2 bg-[#0a3fa6] text-white px-6 py-3 rounded-xl hover:bg-[#083285] transition-all hover:-translate-y-1 shadow-lg shadow-blue-900/10 font-bold"
+                    >
+                        <Plus size={20} weight="bold"/>
+                        Nueva Sala
+                    </button>
                 </div>
 
-                {/* BARRA DE BÚSQUEDA */}
-                <div className="mb-8 relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" weight="bold" />
+                {/* CONTROLES */}
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex items-center">
+                    <div className="relative w-full md:w-96">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" weight="bold" />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-medium text-gray-700"
+                        />
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Buscar salas por nombre o estado"
-                        className="
-                            w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200
-                            bg-white text-gray-700 shadow-sm
-                            focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500
-                            transition-all duration-200
-                        "
-                    />
                 </div>
 
                 {/* TABLA */}
-                <div className="border border-gray-100 rounded-2xl shadow-sm overflow-hidden bg-white">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                        <tr className="bg-[#f9fafb] border-b border-gray-100">
-                            <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Nombre</th>
-                            <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Capacidad</th>
-                            <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
-                            <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Recursos</th>
-                            <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Acciones</th>
-                        </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                        {mockRooms.map((room) => (
-                            <tr key={room.id} className="hover:bg-gray-50/50 transition-colors group">
-                                {/* Nombre */}
-                                <td className="py-5 px-6 font-bold text-gray-800">
-                                    {room.name}
-                                </td>
-
-                                {/* Capacidad */}
-                                <td className="py-5 px-6 text-gray-600">
-                                    {room.capacity}
-                                </td>
-
-                                {/* Estado */}
-                                <td className="py-5 px-6">
-                                    {room.status === 'active' ? (
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                                                Disponible
-                                            </span>
-                                    ) : (
-                                        <div className="flex flex-col items-start">
-                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 mb-1">
-                                                    Deshabilitada
-                                                </span>
-                                            <span className="text-[10px] text-gray-400 pl-1">
-                                                    Hasta {room.disabledUntil}
-                                                </span>
-                                        </div>
-                                    )}
-                                </td>
-
-                                {/* Recursos */}
-                                <td className="py-5 px-6 text-gray-500 text-sm">
-                                    {room.resources}
-                                </td>
-
-                                {/* Acciones */}
-                                <td className="py-5 px-6 text-right">
-                                    <div className="flex items-center justify-end gap-4 text-sm font-semibold">
-                                        <button className="text-blue-600 hover:text-blue-800 transition-colors">
-                                            Editar
-                                        </button>
-                                        <button className={`${room.status === 'active' ? 'text-yellow-600 hover:text-yellow-800' : 'text-green-600 hover:text-green-800'} transition-colors`}>
-                                            {room.status === 'active' ? 'Deshabilitar' : 'Habilitar'}
-                                        </button>
-                                        <button className="text-red-500 hover:text-red-700 transition-colors">
-                                            Eliminar
-                                        </button>
-                                    </div>
-                                </td>
+                <div className="border border-gray-200 rounded-2xl shadow-sm overflow-hidden bg-white">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                            <tr className="bg-gray-50/50 border-b border-gray-100">
+                                <th className="py-5 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Nombre</th>
+                                <th className="py-5 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Capacidad</th>
+                                <th className="py-5 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Piso</th>
+                                <th className="py-5 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Equipamiento</th>
+                                <th className="py-5 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Acciones</th>
                             </tr>
-                        ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={5} className="py-12 text-center text-gray-500 font-medium animate-pulse">
+                                        Cargando información...
+                                    </td>
+                                </tr>
+                            ) : filteredRooms.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="py-12 text-center text-gray-500">
+                                        No se encontraron salas registradas.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredRooms.map((room) => (
+                                    <tr key={room.id} className="hover:bg-blue-50/30 transition-colors group">
+                                        {/* Nombre */}
+                                        <td className="py-5 px-6">
+                                            <span className="font-bold text-gray-800 text-[15px]">{room.name}</span>
+                                        </td>
+
+                                        {/* Capacidad */}
+                                        <td className="py-5 px-6 text-center">
+                                                <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 font-bold text-xs">
+                                                    {room.capacity}
+                                                </span>
+                                        </td>
+
+                                        {/* Piso */}
+                                        <td className="py-5 px-6 text-center text-gray-500 font-medium">
+                                            {room.floor}°
+                                        </td>
+
+                                        {/* Recursos */}
+                                        <td className="py-5 px-6">
+                                            <div className="flex flex-wrap gap-2">
+                                                {room.equipment && room.equipment.length > 0 ? (
+                                                    room.equipment.map((res, idx) => (
+                                                        <span key={idx} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-gray-200 text-gray-600 text-xs font-medium shadow-sm">
+                                                                <ResourceIcon name={res}/>
+                                                            {res}
+                                                            </span>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-gray-300 text-xs italic">Sin equipamiento</span>
+                                                )}
+                                            </div>
+                                        </td>
+
+                                        {/* Acciones */}
+                                        <td className="py-5 px-6 text-right">
+                                            <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => handleEdit(room)}
+                                                    className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                                                    title="Editar"
+                                                >
+                                                    <PencilSimpleLine size={18} weight="bold" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(room.id)}
+                                                    className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                                                    title="Eliminar"
+                                                >
+                                                    <Trash size={18} weight="bold" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+
+            {/* MODAL */}
+            <RoomModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={handleSave}
+                initialData={editingRoom}
+            />
         </main>
     );
 };
