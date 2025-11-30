@@ -9,13 +9,14 @@ import {
     UserCircleIcon,
     CaretDownIcon,
     ListIcon,
-    SignOutIcon
+    SignOutIcon,
+    PresentationChartIcon // <--- IMPORTANTE: Icono del panel
 } from "@phosphor-icons/react";
 
 export default function Navbar() {
     const { user, isLoading, logout, openLoginModal } = useAuth();
 
-    // AÑADIR LOS ESTADOS PARA LOS TRES MENÚS
+    // Estados para los menús
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
     const [isMobileAccountOpen, setIsMobileAccountOpen] = useState(false);
@@ -40,7 +41,14 @@ export default function Navbar() {
         return null;
     }
 
-    //RENDERIZADO DE LA <AppNavbar> (SI ESTÁ LOGUEADO)
+    // --- DEBUG: MIRA ESTO EN LA CONSOLA DEL NAVEGADOR (F12) ---
+    if (user) {
+        console.log("ROL ACTUAL:", user.rol);
+    }
+
+    // ---------------------------------------------------------
+    // RENDERIZADO DE LA NAVBAR PARA USUARIO LOGUEADO
+    // ---------------------------------------------------------
     if (user) {
         return (
             <nav
@@ -48,7 +56,7 @@ export default function Navbar() {
                 role="navigation"
                 aria-label="Aplicación"
             >
-                {/*SECCIÓN DESKTOP */}
+                {/* SECCIÓN DESKTOP */}
                 <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 p-4 lg:grid lg:grid-cols-3">
 
                     {/* Logo (Izquierda) */}
@@ -62,7 +70,7 @@ export default function Navbar() {
                     </span>
                     </Link>
 
-                    {/*Links de la App (Oculto en celular) */}
+                    {/* Links de la App (Oculto en celular) */}
                     <ul className="m-0 hidden list-none justify-center gap-2 p-0 lg:flex lg:col-span-1 lg:justify-self-center">
                         <li>
                             <NavLink to="/" className={appNavLinkClasses}>
@@ -82,12 +90,20 @@ export default function Navbar() {
                                 Salas de Estudio
                             </NavLink>
                         </li>
+
+                        {/* --- AQUÍ ESTÁ EL BOTÓN DEL PANEL --- */}
+                        {user.rol === 'ADMIN' && (
+                            <li>
+                                <NavLink to="/admin/panel" className={appNavLinkClasses}>
+                                    <PresentationChartIcon size={20} weight="fill" />
+                                    Panel
+                                </NavLink>
+                            </li>
+                        )}
                     </ul>
 
                     {/* Acciones (Desktop) */}
                     <div className="hidden items-center justify-end gap-2 lg:flex lg:col-span-1 lg:justify-self-end">
-
-
                         <div className="relative">
                             <button
                                 className={appNavLinkClasses({isActive: false})}
@@ -157,6 +173,16 @@ export default function Navbar() {
                                 Salas de Estudio
                             </NavLink>
                         </li>
+
+                        {/* --- ENLACE ADMIN CELULAR --- */}
+                        {user.rol === 'ADMIN' && (
+                            <li>
+                                <NavLink to="/admin/panel" className={mobileNavLinkClasses} onClick={() => setIsMobileMenuOpen(false)}>
+                                    <PresentationChartIcon size={22} />
+                                    Panel Admin
+                                </NavLink>
+                            </li>
+                        )}
                     </ul>
 
                     {/* Acciones Celular */}
@@ -192,7 +218,9 @@ export default function Navbar() {
         );
     }
 
-    // RENDERIZADO DE LA <PublicNavbar> (SI NO ESTÁ LOGUEADO)
+    // ---------------------------------------------------------
+    // RENDERIZADO DE LA NAVBAR PÚBLICA (NO LOGUEADO)
+    // ---------------------------------------------------------
     return (
         <nav
             className="sticky top-0 z-[100] w-full bg-white shadow-lg"
