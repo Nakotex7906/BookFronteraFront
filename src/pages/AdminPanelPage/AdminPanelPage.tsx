@@ -2,13 +2,13 @@
 import { useEffect, useState } from 'react';
 import {
     MagnifyingGlassIcon,
-    Plus,
-    PencilSimpleLine,
-    Trash,
-    Monitor,
-    Chalkboard,
-    WarningCircle,
-    Desktop
+    PlusIcon,
+    PencilSimpleLineIcon,
+    TrashIcon,
+    MonitorIcon,
+    ChalkboardIcon,
+    WarningCircleIcon,
+    DesktopIcon
 } from '@phosphor-icons/react';
 import { RoomApi, type Room, type RoomDto } from '../../services/RoomApi';
 import RoomModal from '../../components/Admin/RoomModal';
@@ -16,10 +16,10 @@ import RoomModal from '../../components/Admin/RoomModal';
 // Helper para iconos de recursos
 const ResourceIcon = ({ name }: { name: string }) => {
     const n = name.toLowerCase();
-    if (n.includes('proyector') || n.includes('pantalla')) return <Monitor size={16} className="text-gray-500"/>;
-    if (n.includes('pc') || n.includes('computador')) return <Desktop size={16} className="text-gray-500"/>;
-    if (n.includes('pizarra')) return <Chalkboard size={16} className="text-gray-500"/>;
-    return <WarningCircle size={16} className="text-gray-300"/>;
+    if (n.includes('proyector') || n.includes('pantalla')) return <MonitorIcon size={16} className="text-gray-500"/>;
+    if (n.includes('pc') || n.includes('computador')) return <DesktopIcon size={16} className="text-gray-500"/>;
+    if (n.includes('pizarra')) return <ChalkboardIcon size={16} className="text-gray-500"/>;
+    return <WarningCircleIcon size={16} className="text-gray-300"/>;
 }
 
 const AdminPanelPage = () => {
@@ -109,7 +109,7 @@ const AdminPanelPage = () => {
                         onClick={handleCreate}
                         className="flex items-center gap-2 bg-[#0a3fa6] text-white px-6 py-3 rounded-xl hover:bg-[#083285] transition-all hover:-translate-y-1 shadow-lg shadow-blue-900/10 font-bold"
                     >
-                        <Plus size={20} weight="bold"/>
+                        <PlusIcon size={20} weight="bold"/>
                         Nueva Sala
                     </button>
                 </div>
@@ -200,14 +200,14 @@ const AdminPanelPage = () => {
                                                     className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                                                     title="Editar"
                                                 >
-                                                    <PencilSimpleLine size={18} weight="bold" />
+                                                    <PencilSimpleLineIcon size={18} weight="bold" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(room.id)}
                                                     className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                                                     title="Eliminar"
                                                 >
-                                                    <Trash size={18} weight="bold" />
+                                                    <TrashIcon size={18} weight="bold" />
                                                 </button>
                                             </div>
                                         </td>
