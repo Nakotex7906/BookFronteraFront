@@ -41,8 +41,7 @@ export default function MyReservations() {
         try {
             await AvailabilityApi.cancelReservation(id);
             await fetchReservations(); // Recargar todo
-        } catch (err: any) { // <-- ¡AQUÍ ESTABA EL ERROR!
-            // Faltaban estas llaves { }
+        } catch (err: any) {
             alert(err.message || "Error al cancelar la reserva.");
         } finally {
             setCancellingId(null);
@@ -57,7 +56,6 @@ export default function MyReservations() {
         return <div className="p-8 text-center text-red-600">{error}</div>;
     }
 
-    // --- NUEVO LAYOUT (Basado en HTML de Stitch) ---
     return (
         <main className="container mx-auto p-6 lg:p-8">
             <header className="mb-8">
@@ -104,18 +102,18 @@ export default function MyReservations() {
                     )}
                 </section>
 
-                {/* Sección: Reservas Pasadas (Mantenemos esta sección) */}
+                {/* Sección: Reservas Pasadas */}
                 <section>
                     <h2 className="text-xl font-bold text-gray-900 mb-4">Reservas Pasadas</h2>
                     {past.length > 0 ? (
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {past.map(res => (
                                 <ReservationCard
                                     key={res.id}
                                     reservation={res}
                                     onCancel={() => {}}
                                     isCancelling={false}
-                                    layout="default"
+                                    layout="vertical"
                                     showActions={false}
                                 />
                             ))}
