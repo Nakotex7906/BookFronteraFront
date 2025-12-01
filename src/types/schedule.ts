@@ -20,8 +20,8 @@ export type DailyAvailabilityResponse = {
 
 export type ReservationRequest = {
     roomId: string;
-    date: string;
-    slotId: string;
+    startAt: string;
+    endAt: string;
     addToGoogleCalendar: boolean;
 };
 
