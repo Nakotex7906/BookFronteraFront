@@ -1,4 +1,3 @@
-// src/services/RoomApi.ts
 import { http } from "./http";
 
 export interface Room {
@@ -7,9 +6,9 @@ export interface Room {
     capacity: number;
     floor: number;
     equipment: string[];
+    imageUrl?: string;
 }
 
-// DTO para crear/editar
 export interface RoomDto {
     id?: number;
     name: string;
@@ -19,25 +18,39 @@ export interface RoomDto {
 }
 
 export class RoomApi {
-    // Obtener todas las salas
     static async getAll(): Promise<Room[]> {
         const { data } = await http.get<Room[]>("/rooms");
         return data;
     }
 
-    // Crear sala
-    static async create(room: RoomDto): Promise<Room> {
-        const { data } = await http.post<Room>("/rooms", room);
+    static async create(room: RoomDto, image?: File | null): Promise<Room> {
+        const formData = new FormData();
+        const roomBlob = new Blob([JSON.stringify(room)], { type: "application/json" });
+        formData.append("room", roomBlob);
+        if (image) formData.append("image", image);
+
+        const { data } = await http.post<Room>("/rooms", formData);
         return data;
     }
 
-    // Actualizar sala
-    static async update(id: number, room: RoomDto): Promise<Room> {
-        const { data } = await http.patch<Room>(`/rooms/${id}`, room);
+    // --- ACTUALIZADO: Ahora soporta imagen ---
+    static async update(id: number, room: RoomDto, image?: File | null): Promise<Room> {
+        const formData = new FormData();
+
+        // 1. DTO
+        const roomBlob = new Blob([JSON.stringify(room)], { type: "application/json" });
+        formData.append("room", roomBlob);
+
+        // 2. Imagen (si el usuario seleccionó una nueva)
+        if (image) {
+            formData.append("image", image);
+        }
+
+        // Usamos PATCH con FormData
+        const { data } = await http.patch<Room>(`/rooms/${id}`, formData);
         return data;
     }
 
-    // Eliminar sala
     static async delete(id: number): Promise<void> {
         await http.delete(`/rooms/${id}`);
     }

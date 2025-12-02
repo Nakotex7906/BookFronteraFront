@@ -1,12 +1,11 @@
-// src/components/Admin/RoomModal.tsx
 import React, { useState, useEffect } from 'react';
 import type { RoomDto } from '../../services/RoomApi';
-import { X } from '@phosphor-icons/react';
+import { X, UploadSimple } from '@phosphor-icons/react';
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (room: RoomDto) => Promise<void>;
+    onSave: (room: RoomDto, image?: File | null) => Promise<void>;
     initialData?: RoomDto | null;
 }
 
@@ -15,19 +14,20 @@ export default function RoomModal({ isOpen, onClose, onSave, initialData }: Prop
     const [capacity, setCapacity] = useState(1);
     const [floor, setFloor] = useState(1);
     const [equipmentStr, setEquipmentStr] = useState('');
+
+    // Estados para la imagen
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Se cargan datos si estamos editando
     useEffect(() => {
         if (isOpen) {
+            setSelectedFile(null);
             if (initialData) {
                 setName(initialData.name);
                 setCapacity(initialData.capacity);
                 setFloor(initialData.floor);
-                // Convertimos el array a string para el input
                 setEquipmentStr(initialData.equipment ? initialData.equipment.join(', ') : '');
             } else {
-                // Reset para crear nueva sala
                 setName('');
                 setCapacity(4);
                 setFloor(1);
@@ -36,23 +36,30 @@ export default function RoomModal({ isOpen, onClose, onSave, initialData }: Prop
         }
     }, [isOpen, initialData]);
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setSelectedFile(e.target.files[0]);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
         try {
-            // Convertimos string de equipos a array, limpiando espacios por coma
             const equipmentArray = equipmentStr
                 .split(',')
                 .map(s => s.trim())
                 .filter(s => s.length > 0);
 
-            await onSave({
+            const roomData: RoomDto = {
                 id: initialData?.id,
                 name,
                 capacity,
                 floor,
                 equipment: equipmentArray
-            });
+            };
+
+            await onSave(roomData, selectedFile);
             onClose();
         } catch (error) {
             console.error(error);
@@ -112,6 +119,28 @@ export default function RoomModal({ isOpen, onClose, onSave, initialData }: Prop
                                 value={floor} onChange={e => setFloor(parseInt(e.target.value))}
                             />
                         </div>
+                    </div>
+
+                    {/* INPUT DE IMAGEN */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                            {initialData ? "Cambiar Imagen (Opcional)" : "Imagen (Opcional)"}
+                        </label>
+                        <label className="flex items-center gap-3 px-4 py-2.5 border border-gray-200 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 transition-colors group">
+                            <UploadSimple size={20} className="text-blue-600 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm text-gray-600 truncate">
+                                {selectedFile
+                                    ? selectedFile.name
+                                    : (initialData ? "Click para reemplazar imagen actual..." : "Seleccionar imagen...")
+                                }
+                            </span>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleFileChange}
+                            />
+                        </label>
                     </div>
 
                     <div>
