@@ -1,18 +1,16 @@
 import axios from "axios";
 
 export const http = axios.create({
-    baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8080/api",
+    baseURL: "/api/v1",
     timeout: 10_000,
     withCredentials: true,
 });
 
-// (Opcional) Manejo global de 401/403
+// Interceptor para redirigir al login si la sesión expira
 http.interceptors.response.use(
     (r) => r,
     (error) => {
-        if (error.response?.status === 401) {
-            // Si una API request falla por no estar autenticado,
-            // redirige a login.
+        if (error.response?.status === 401 && !error.config.url.includes('/users/me')) {
             window.location.href = '/login';
         }
         return Promise.reject(error);

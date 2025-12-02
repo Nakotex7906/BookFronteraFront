@@ -79,16 +79,15 @@ const AdminPanelPage = () => {
             }
         }
     };
+
     const handleSave = async (roomData: RoomDto, image?: File | null) => {
         try {
             if (roomData.id) {
-                // EDICIÓN + Imagen opcional
                 await RoomApi.update(roomData.id, roomData, image);
             } else {
-                // CREACIÓN + Imagen opcional
                 await RoomApi.create(roomData, image);
             }
-            loadRooms();
+            await loadRooms();
         } catch (error) {
             console.error("Error al guardar:", error);
             alert("Error al guardar la sala.");

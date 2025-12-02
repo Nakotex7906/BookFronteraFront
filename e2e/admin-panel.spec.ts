@@ -1,83 +1,78 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Flujo: Panel Admin (CRUD Salas)', () => {
+test.describe('Prueba E2E Panel de Administración', () => {
 
-    test.beforeEach(async ({ page }) => {
-        // Mock ADMIN
-        await page.route('**/api/v1/users/me', async route => {
-            await route.fulfill({
-                json: { id: 2, email: "admin@ufro.cl", nombre: "Admin", rol: "ADMIN" }
-            });
-        });
+    // Se utiliza la sesión guardada previamente para saltar el login
+    test.use({ storageState: 'playwright/.auth/admin.json' });
 
+    // Se generan nombres únicos para no afectar datos reales
+    const TIMESTAMP = Date.now();
+    const ROOM_NAME = `Sala Test ${TIMESTAMP}`;
+    const EDITED_NAME = `SALA-ACTUALIZADA-${TIMESTAMP}`;
 
-        await page.route('**/api/**/rooms', async route => {
-            if (route.request().method() === 'GET') {
-                await route.fulfill({
-                    json: [{ id: 1, name: "Sala Existente", capacity: 5, floor: 1, equipment: [] }]
-                });
-            } else {
-                await route.fallback();
-            }
-        });
-    });
-
-    test('debe permitir crear una nueva sala', async ({ page }) => {
-        // Preparamos el mock para el POST
-        await page.route('**/api/**/rooms', async route => {
-            if (route.request().method() === 'POST') {
-                const data = route.request().postDataJSON();
-                await route.fulfill({
-                    status: 201,
-                    contentType: 'application/json',
-                    json: { id: 2, ...data }
-                });
-            } else {
-                await route.fallback();
-            }
-        });
-
+    test('Ciclo de vida completo: Crear, Editar y Borrar una sala real', async ({ page }) => {
+        // Se navega al panel de administración
         await page.goto('http://localhost:5173/admin/panel');
+        await expect(page.getByRole('heading', { name: 'Gestión de Salas' })).toBeVisible();
 
-        // Abrir modal y llenar formulario
+        // ----------------------------------------------------------------
+        // 1. CREAR SALA
+        // ----------------------------------------------------------------
+
+        console.log(`Creando sala: ${ROOM_NAME}`);
         await page.getByRole('button', { name: 'Nueva Sala' }).click();
-        await page.getByPlaceholder('Ej: Sala de Estudio A').fill('Sala Nueva E2E');
-        await page.locator('input[type="number"]').first().fill('10');
 
-        //  Esperamos la petición
-        const requestPromise = page.waitForRequest(request =>
-            request.url().includes('/rooms') && request.method() === 'POST'
-        );
+        // Se llenan los datos del formulario
+        await page.getByPlaceholder('Ej: Sala de Estudio A').fill(ROOM_NAME);
+        await page.locator('input[type="number"]').first().fill('5');
+        await page.locator('input[type="number"]').nth(1).fill('1');
 
-        // Hacemos clic
         await page.getByRole('button', { name: 'Guardar Sala' }).click();
 
-        //  Esperamos a que la petición sea capturada
-        const request = await requestPromise;
+        // Se espera a que el modal desaparezca y la tabla se actualice
+        await expect(page.getByRole('dialog')).not.toBeVisible();
+        await expect(page.getByText(ROOM_NAME, { exact: true })).toBeVisible();
 
-        // Validamos
-        const createdPayload = request.postDataJSON();
-        expect(createdPayload).toBeTruthy();
-        expect(createdPayload.name).toBe('Sala Nueva E2E');
-    });
 
-    test('debe eliminar una sala existente', async ({ page }) => {
-        // Mock DELETE para ID 1
-        await page.route('**/api/**/rooms/1', async route => {
-            await route.fulfill({ status: 200 });
-        });
+        // ----------------------------------------------------------------
+        // 2. EDITAR LA SALA RECIÉN CREADA
+        // ----------------------------------------------------------------
 
-        const deleteRequestPromise = page.waitForRequest(request =>
-            request.url().includes('/rooms/1') && request.method() === 'DELETE'
-        );
+        console.log(`Editando sala...`);
 
-        await page.goto('http://localhost:5173/admin/panel');
+        // Se busca la fila específica que creamos para evitar editar otra
+        const row = page.locator('tr', { hasText: ROOM_NAME });
+        await row.getByTitle('Editar datos').click();
 
-        page.on('dialog', async dialog => await dialog.accept());
+        // Se asegura que estamos escribiendo en el input del modal y no en el buscador
+        const nameInput = page.getByPlaceholder('Ej: Sala de Estudio A');
+        await expect(nameInput).toBeVisible();
+        await nameInput.fill(EDITED_NAME);
 
-        await page.getByTitle('Eliminar').first().click();
+        await page.getByRole('button', { name: 'Guardar Sala' }).click();
 
-        const deleteRequest = await deleteRequestPromise;
-        expect(deleteRequest).toBeTruthy();
+        // Se espera que termine la carga y se cierre el modal
+        await expect(page.getByRole('dialog')).not.toBeVisible();
+        await expect(page.getByText('Cargando información...')).not.toBeVisible();
+
+        // Se verifica que el nombre antiguo ya no esté y aparezca el nuevo
+        await expect(page.getByText(ROOM_NAME)).not.toBeVisible();
+        await expect(page.getByText(EDITED_NAME)).toBeVisible();
+
+
+        // ----------------------------------------------------------------
+        // 3. ELIMINAR LA SALA PARA LIMPIAR DATOS
+        // ----------------------------------------------------------------
+
+        console.log(`Eliminando sala para limpiar...`);
+
+        const rowEdited = page.locator('tr', { hasText: EDITED_NAME });
+
+        // Se configura el listener para aceptar la alerta del navegador
+        page.once('dialog', async dialog => await dialog.accept());
+        await rowEdited.getByTitle('Eliminar sala').click();
+
+        // Se confirma que la sala se haya eliminado de la lista
+        await expect(page.getByText(EDITED_NAME)).not.toBeVisible();
     });
 });
