@@ -13,6 +13,7 @@ import TimeManagementInfo from "../pages/info/TimeManagementInfo.tsx";
 import EquipmentInfo from "../pages/info/EquipmentInfo.tsx";
 // 1. IMPORTAR LA NUEVA PÁGINA
 import AdminPanelPage from "../pages/AdminPanelPage/AdminPanelPage.tsx";
+import LoginPage from "../pages/Login/LoginPage"
 
 function AppLayout() {
     const location = useLocation();
@@ -35,6 +36,7 @@ function AppLayout() {
                     <Route path="/info/equipo" element={<TeamStudyInfo />} />
                     <Route path="/info/tiempo" element={<TimeManagementInfo />} />
                     <Route path="/info/equipamiento" element={<EquipmentInfo />} />
+                    <Route path="/login" element={<LoginPage />} />
 
                     {/* --- Rutas Protegidas --- */}
                     <Route element={<ProtectedRoute />}>
