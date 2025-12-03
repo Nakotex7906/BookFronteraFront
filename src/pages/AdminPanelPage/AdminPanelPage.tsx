@@ -8,11 +8,13 @@ import {
     ChalkboardIcon,
     WarningCircleIcon,
     DesktopIcon,
-    EyeIcon
+    EyeIcon,
+    CalendarBlankIcon
 } from '@phosphor-icons/react';
 import { RoomApi, type Room, type RoomDto } from '../../services/RoomApi';
 import RoomModal from '../../components/Admin/RoomModal';
 import ImageModal from '../../components/Admin/ImageModal';
+import ReservationManagerModal from '../../components/Admin/ReservationManagerModal';
 
 const ResourceIcon = ({ name }: { name: string }) => {
     const n = name.toLowerCase();
@@ -27,11 +29,15 @@ const AdminPanelPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Estados para Modales de Creación/Edición y Vista de Imagen
     const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
     const [editingRoom, setEditingRoom] = useState<RoomDto | null>(null);
-
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [viewingImageUrl, setViewingImageUrl] = useState<string | undefined>(undefined);
+
+    // GESTIÓN DE RESERVAS
+    const [isResManagerOpen, setIsResManagerOpen] = useState(false);
+    const [selectedRoomForRes, setSelectedRoomForRes] = useState<{id: number, name: string} | null>(null);
 
     const loadRooms = async () => {
         setIsLoading(true);
@@ -102,6 +108,12 @@ const AdminPanelPage = () => {
     const handleCloseImageModal = () => {
         setIsImageModalOpen(false);
         setViewingImageUrl(undefined);
+    };
+
+    // ABRIR GESTOR DE RESERVAS
+    const handleManageReservations = (room: Room) => {
+        setSelectedRoomForRes({ id: room.id, name: room.name });
+        setIsResManagerOpen(true);
     };
 
     return (
@@ -214,6 +226,16 @@ const AdminPanelPage = () => {
                                         </td>
                                         <td className="py-5 px-6 text-right">
                                             <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+
+                                                {/*BOTÓN GESTIONAR RESERVAS */}
+                                                <button
+                                                    onClick={() => handleManageReservations(room)}
+                                                    className="p-2 text-purple-600 bg-purple-50 hover:bg-purple-600 hover:text-white rounded-lg transition-colors shadow-sm"
+                                                    title="Ver y gestionar reservas"
+                                                >
+                                                    <CalendarBlankIcon size={18} weight="bold" />
+                                                </button>
+
                                                 <button
                                                     onClick={() => handleEdit(room)}
                                                     className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
@@ -250,6 +272,14 @@ const AdminPanelPage = () => {
                 isOpen={isImageModalOpen}
                 onClose={handleCloseImageModal}
                 imageUrl={viewingImageUrl}
+            />
+
+            {/* MODAL DE RESERVAS */}
+            <ReservationManagerModal
+                isOpen={isResManagerOpen}
+                onClose={() => setIsResManagerOpen(false)}
+                roomId={selectedRoomForRes?.id ?? null}
+                roomName={selectedRoomForRes?.name ?? ''}
             />
         </main>
     );
