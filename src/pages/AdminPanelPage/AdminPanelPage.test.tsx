@@ -57,7 +57,8 @@ describe('Página: AdminPanelPage', () => {
         // Esperamos la carga inicial
         await waitFor(() => expect(screen.getByText("Sala Alpha")).toBeInTheDocument());
 
-        const deleteButtons = screen.getAllByTitle("Eliminar");
+        // El título en el JSX es "Eliminar sala", no solo "Eliminar"
+        const deleteButtons = screen.getAllByTitle("Eliminar sala");
         fireEvent.click(deleteButtons[0]);
 
         // Verificamos la llamada a borrar
@@ -65,7 +66,6 @@ describe('Página: AdminPanelPage', () => {
         expect(RoomApi.delete).toHaveBeenCalledWith(1);
 
         // Esperamos a que el componente termine de recargar los datos tras el borrado.
-        // Como RoomApi.getAll se llama al inicio (1) y tras borrar (2), esperamos 2 llamadas.
         await waitFor(() => {
             expect(RoomApi.getAll).toHaveBeenCalledTimes(2);
         });

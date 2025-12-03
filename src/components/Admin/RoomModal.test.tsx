@@ -30,7 +30,7 @@ describe('Componente: RoomModal', () => {
         expect(screen.getByPlaceholderText("Ej: Sala de Estudio A")).toBeInTheDocument();
     });
 
-    it('debe llamar a onSave con los datos del formulario', async () => { // <--- Agregamos async
+    it('debe llamar a onSave con los datos del formulario', async () => {
         render(
             <RoomModal
                 isOpen={true}
@@ -39,7 +39,7 @@ describe('Componente: RoomModal', () => {
             />
         );
 
-        // 1. Llenar el formulario
+        // Llenar el formulario
         fireEvent.change(screen.getByPlaceholderText("Ej: Sala de Estudio A"), { target: { value: "Sala Gamma" } });
 
         const inputs = screen.getAllByRole('spinbutton');
@@ -59,11 +59,9 @@ describe('Componente: RoomModal', () => {
             capacity: 8,
             floor: 3,
             equipment: ["TV", "HDMI"]
-        });
+        }, null);
 
-        // --- FIX DEL WARNING ---
         // Esperamos a que el estado interno isSaving vuelva a false.
-        // Sabemos que ocurrió porque el texto vuelve a ser "Guardar Sala" (y no "Guardando...")
         await waitFor(() => {
             expect(screen.getByText("Guardar Sala")).toBeInTheDocument();
         });

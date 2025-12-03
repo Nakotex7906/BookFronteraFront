@@ -28,7 +28,8 @@ describe('Servicio: http interceptor', () => {
         // Esto evita hacer una llamada real y nos permite controlar la respuesta exacta
         http.defaults.adapter = async () => {
             return Promise.reject({
-                response: { status: 401 }
+                response: { status: 401 },
+                config: { url: '/ruta-protegida' }
             });
         };
 
@@ -47,7 +48,8 @@ describe('Servicio: http interceptor', () => {
         // Simulamos un error 500 (Error del servidor)
         http.defaults.adapter = async () => {
             return Promise.reject({
-                response: { status: 500 }
+                response: { status: 500 },
+                config: { url: '/ruta-con-error' }
             });
         };
 
