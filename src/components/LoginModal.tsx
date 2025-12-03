@@ -1,6 +1,6 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
-import { Info, X } from "@phosphor-icons/react";
+import { InfoIcon, XIcon } from "@phosphor-icons/react";
 
 export const LoginModal: React.FC = () => {
     const { isLoginModalOpen, closeLoginModal } = useAuth();
@@ -24,7 +24,7 @@ export const LoginModal: React.FC = () => {
                     onClick={closeLoginModal}
                     className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                    <X size={20} />
+                    <XIcon size={20} />
                 </button>
 
                 <header className="mb-8 text-center">
@@ -39,7 +39,7 @@ export const LoginModal: React.FC = () => {
                 {/* --- AVISO INTEGRADO CON LA MARCA --- */}
                 {/* Usamos bg-blue-50, bordes azules suaves y el color principal para el icono y énfasis */}
                 <div className="mb-8 rounded-2xl bg-blue-50/80 p-5 border border-blue-100/50 flex items-start gap-4">
-                    <Info size={26} className="text-[#0a3fa6] shrink-0 mt-0.5" weight="fill" />
+                    <InfoIcon size={26} className="text-[#0a3fa6] shrink-0 mt-0.5" weight="fill" />
                     <div className="flex-1">
                         <h3 className="text-[#0a3fa6] font-bold text-sm mb-1">
                             Información de Acceso
