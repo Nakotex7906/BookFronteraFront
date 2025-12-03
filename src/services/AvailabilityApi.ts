@@ -4,6 +4,7 @@ import type {
     ReservationRequest,
     ReservationResponse,
     MyReservationsResponse,
+    ReservationOnBehalfRequest
 } from "../types/schedule";
 import { AxiosError } from "axios";
 
@@ -61,6 +62,16 @@ export class AvailabilityApi {
     static async cancelReservation(id: number): Promise<void> {
         try {
             await http.delete(`/reservations/${id}`);
+        } catch (e) {
+            throw new Error(errorMessage(e));
+        }
+    }
+
+    static async createOnBehalf(
+        payload: ReservationOnBehalfRequest
+    ): Promise<void> {
+        try {
+            await http.post("/reservations/on-behalf", payload);
         } catch (e) {
             throw new Error(errorMessage(e));
         }

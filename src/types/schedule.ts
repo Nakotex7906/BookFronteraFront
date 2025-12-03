@@ -56,3 +56,9 @@ export type MyReservationsResponse = {
     future: ReservationDetail[];
     past: ReservationDetail[];
 };
+export type ReservationOnBehalfRequest = {
+    roomId: string;
+    startAt: string;
+    endAt: string;
+    othersEmail: string;
+};

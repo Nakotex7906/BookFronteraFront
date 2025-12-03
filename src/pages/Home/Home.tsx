@@ -41,13 +41,11 @@ export default function Home() {
     const businessDays = useMemo(() => getNextBusinessDays(8), []);
 
     // 2. ESTADO: Fecha seleccionada (Inicializamos con el primer día hábil)
-    //    Esto reemplaza al 'const today' fijo.
     const [selectedDateISO, setSelectedDateISO] = useState<string>(
         getLocalISOString(businessDays[0])
     );
 
     // 3. HOOK: Ahora depende de 'selectedDateISO'.
-    //    Al cambiar la fecha, la grilla se recargará con los datos de ESE día.
     const { rooms, slots, matrix, loading } = useAvailability(selectedDateISO);
 
     const navigate = useNavigate();
@@ -59,10 +57,14 @@ export default function Home() {
     const [bookingError, setBookingError] = useState<string | null>(null);
     const [addToGoogle, setAddToGoogle] = useState(true);
 
-    // Limpiamos selección al cambiar de día
+    // Email para reservar a nombre de otro (Solo Admin)
+    const [behalfEmail, setBehalfEmail] = useState("");
+
+    // Limpiamos selección y email a nombre de al cambiar de día
     useEffect(() => {
         setSelectedBooking(null);
         setIsModalOpen(false);
+        setBehalfEmail("");
     }, [selectedDateISO]);
 
     const handleSlotSelect = (roomId: string, slotId: string) => {
@@ -89,22 +91,31 @@ export default function Home() {
                 return;
             }
 
-            // Usamos 'selectedDateISO' en lugar de 'today' para que la reserva
-            // se haga en el día que estás mirando en pantalla.
             const startDateTime = new Date(`${selectedDateISO}T${slotInfo.start}:00`);
             const endDateTime = new Date(`${selectedDateISO}T${slotInfo.end}:00`);
 
             const startAtISO = startDateTime.toISOString();
             const endAtISO = endDateTime.toISOString();
 
-            console.log("Reservando para:", startAtISO); // Debug
+            console.log("Reservando para:", startAtISO);
 
-            await AvailabilityApi.createReservation({
-                roomId: selectedBooking.roomId,
-                startAt: startAtISO,
-                endAt: endAtISO,
-                addToGoogleCalendar: addToGoogle
-            });
+            // Si es ADMIN y escribió un correo válido, usamos createOnBehalf
+            if (user.rol === 'ADMIN' && behalfEmail.trim() !== "") {
+                await AvailabilityApi.createOnBehalf({
+                    roomId: selectedBooking.roomId,
+                    startAt: startAtISO,
+                    endAt: endAtISO,
+                    othersEmail: behalfEmail.trim()
+                });
+            } else {
+                // Flujo normal (se reserva a sí mismo)
+                await AvailabilityApi.createReservation({
+                    roomId: selectedBooking.roomId,
+                    startAt: startAtISO,
+                    endAt: endAtISO,
+                    addToGoogleCalendar: addToGoogle
+                });
+            }
 
             // Redirección de éxito
             const roomInfo = rooms.find(r => r.id === selectedBooking.roomId);
@@ -129,6 +140,7 @@ export default function Home() {
         setSelectedBooking(null);
         setBookingError(null);
         setAddToGoogle(true);
+        setBehalfEmail(""); // Limpiar email al cerrar
     };
 
     const modalRoomName = rooms.find(r => r.id === selectedBooking?.roomId)?.name;
@@ -204,17 +216,42 @@ export default function Home() {
                 title="Confirmar Reserva"
                 isLoading={isBooking}
                 error={bookingError}
-                showGoogleCalendarCheck={true}
+                // Si está reservando para otro (behalfEmail tiene texto), ocultamos el checkbox de GCalendar
+                // para evitar confusión (ya que no se agregará al calendario del admin).
+                showGoogleCalendarCheck={!behalfEmail}
                 googleCalendarChecked={addToGoogle}
                 onGoogleCalendarChange={setAddToGoogle}
             >
-                <p>
-                    ¿Estás seguro de que quieres reservar la sala
-                    <strong> {modalRoomName ?? ''}</strong> para el día
-                    <strong> {selectedDateISO} </strong>
-                    en el horario
-                    <strong> {modalSlotLabel ?? ''}</strong>?
-                </p>
+                <div className="flex flex-col gap-5">
+                    <p>
+                        ¿Estás seguro de que quieres reservar la sala
+                        <strong> {modalRoomName ?? ''}</strong> para el día
+                        <strong> {selectedDateISO} </strong>
+                        en el horario
+                        <strong> {modalSlotLabel ?? ''}</strong>?
+                    </p>
+
+                    {/* SECCIÓN EXCLUSIVA ADMIN: Reservar para otro */}
+                    {user?.rol === 'ADMIN' && (
+                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-left animate-in fade-in zoom-in-95">
+                            <label className="block text-xs font-bold text-blue-800 uppercase mb-2">
+                                 Opción Admin: Reservar para estudiante
+                            </label>
+                            <input
+                                type="email"
+                                placeholder="ejemplo@ufromail.cl"
+                                value={behalfEmail}
+                                onChange={(e) => setBehalfEmail(e.target.value)}
+                                className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-blue-300"
+                            />
+                            <p className="text-[11px] text-blue-600 mt-1.5 leading-tight">
+                                * Si dejas este campo vacío, la reserva quedará a tu nombre.
+                                <br />
+                                * Las reservas a nombre de terceros no se sincronizan con Google Calendar.
+                            </p>
+                        </div>
+                    )}
+                </div>
             </ConfirmModal>
         </main>
     );
