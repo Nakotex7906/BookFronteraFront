@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { CheckCircleIcon, MagnifyingGlassIcon, DoorOpenIcon, SmileySadIcon } from "@phosphor-icons/react";
 import { AvailabilityApi } from "../../services/AvailabilityApi";
 import type { DailyAvailabilityResponse } from "../../types/schedule";
@@ -6,37 +6,65 @@ import type { Room } from "../../types/room";
 import { CustomSelect } from "../../components/UI/CustomSelect";
 import { CustomDatePicker } from "../../components/UI/CustomDatePicker";
 
+// Helper para obtener string YYYY-MM-DD local
+const getLocalISOString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+};
+
 export default function StudyRooms() {
-    // --- ESTADOS ---
     const [data, setData] = useState<DailyAvailabilityResponse | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // Filtros seleccionados
     const [filters, setFilters] = useState({
-        date: new Date().toISOString().slice(0, 10), // 'YYYY-MM-DD'
+        date: getLocalISOString(new Date()), // Hoy
         slotId: 'Cualquiera',
         capacity: 'Cualquiera',
         resource: 'Cualquiera'
     });
 
-    // Resultados filtrados
     const [results, setResults] = useState<Room[]>([]);
     const [hasSearched, setHasSearched] = useState(false);
 
-    // --- CARGAR DATOS AL INICIO O AL CAMBIAR FECHA ---
+    // CÁLCULO DE FECHAS (Lógica de Negocio) ---
+    const { minDate, maxDate } = useMemo(() => {
+        const today = new Date();
+        const min = getLocalISOString(today);
+
+        // Calcular 7 días hábiles a futuro
+        let businessDaysAdded = 0;
+        const pointerDate = new Date(today);
+
+        // Sumamos hasta encontrar 7 días hábiles (Lunes a Viernes)
+        while (businessDaysAdded < 7) {
+            pointerDate.setDate(pointerDate.getDate() + 1);
+            const day = pointerDate.getDay();
+            if (day !== 0 && day !== 6) { // Si no es Domingo (0) ni Sábado (6)
+                businessDaysAdded++;
+            }
+        }
+
+        const max = getLocalISOString(pointerDate);
+        return { minDate: min, maxDate: max };
+    }, []);
+
+    // CARGAR DATOS
     useEffect(() => {
         let isMounted = true;
         const loadData = async () => {
             setIsLoading(true);
-            setError(null);
+            if(filters.slotId !== 'Cualquiera') setError(null);
             setHasSearched(false);
+
             try {
-                // Llamamos a la API para obtener  el día
                 const response = await AvailabilityApi.getAvailability(filters.date);
                 if (isMounted) {
                     setData(response);
-                    setResults([]); // Empezamos vacío hasta que den a "Buscar"
+                    setResults([]);
                 }
             } catch (err: any) {
                 if (isMounted) setError(err.message || "Error al cargar disponibilidad.");
@@ -48,46 +76,51 @@ export default function StudyRooms() {
         return () => { isMounted = false; };
     }, [filters.date]);
 
-    // --- MANEJO DE FILTROS ---
+    // MANEJO DE FILTROS
     const handleFilterUpdate = (name: string, value: string) => {
         setFilters(prev => ({ ...prev, [name]: value }));
+        // Limpiamos el error si el usuario cambia algo
+        if (error) setError(null);
     };
 
-    // --- LÓGICA DE BÚSQUEDA (FILTRADO EN MEMORIA) ---
+    // LÓGICA DE BÚSQUEDA
     const handleSearch = () => {
         if (!data) return;
+
+        // VALIDACIÓN: Hora obligatoria
+        if (filters.slotId === 'Cualquiera') {
+            setError(" Debes seleccionar una hora específica para buscar.");
+            setHasSearched(false); // Evita mostrar "No se encontraron salas"
+            return;
+        }
+
+        setError(null);
         setHasSearched(true);
 
         const { slotId, capacity, resource } = filters;
 
         const filtered = data.rooms.filter(room => {
-            // 1. Filtro de Capacidad
+            // Filtro Capacidad
             if (capacity !== 'Cualquiera') {
                 const minCap = parseInt(capacity, 10);
                 if (room.capacity < minCap) return false;
             }
 
-            // 2. Filtro de Recursos
+            // Filtro Recursos
             if (resource !== 'Cualquiera') {
-                // room.equipment es string[], verificamos si incluye el recurso
                 const hasResource = room.equipment?.some(eq =>
                     eq.toLowerCase().includes(resource.toLowerCase())
                 );
                 if (!hasResource) return false;
             }
 
-            // 3. Filtro de Disponibilidad (Hora)
-            if (slotId !== 'Cualquiera') {
-                // Buscamos en la matriz de disponibilidad si esta sala está libre en ese bloque
-                // Nota: convertimos roomId a String para asegurar coincidencia
-                const availabilityEntry = data.availability.find(
-                    a => String(a.roomId) === String(room.id) && a.slotId === slotId
-                );
+            // Filtro Disponibilidad (Ya validamos que slotId no es 'Cualquiera')
+            const availabilityEntry = data.availability.find(
+                a => String(a.roomId) === String(room.id) && a.slotId === slotId
+            );
 
-                // Si no existe entrada o available es false, descartamos la sala
-                if (!availabilityEntry || !availabilityEntry.available) {
-                    return false;
-                }
+            if (!availabilityEntry || !availabilityEntry.available) {
+                return false;
             }
 
             return true;
@@ -96,7 +129,6 @@ export default function StudyRooms() {
         setResults(filtered);
     };
 
-    // --- OPCIONES PARA LOS SELECTS ---
     const capacityOptions = [
         { value: "Cualquiera", label: "Cualquiera" },
         { value: "2", label: "2 Personas" },
@@ -113,40 +145,39 @@ export default function StudyRooms() {
         { value: "Pc", label: "PC" },
     ];
 
-    // Las opciones de hora vienen de la API (data.slots)
     const timeOptions = [
-        { value: "Cualquiera", label: "Cualquiera" },
+        { value: "Cualquiera", label: "Seleccionar hora..." }, // Texto más explicativo
         ...(data?.slots.map(s => ({ value: s.id, label: s.label })) || [])
     ];
 
     return (
         <main className="min-h-screen bg-[#f4f6f9] p-6 lg:p-8 font-sans">
             <div className="mx-auto max-w-5xl">
-
-                {/* Título */}
                 <header className="mb-8">
                     <h1 className="text-3xl font-extrabold text-[#1a1a1a] tracking-tight">
                         Encuentra una Sala de Estudio
                     </h1>
                 </header>
 
-                {/* --- TARJETA DE FILTROS --- */}
                 <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-10 relative z-20 transition-all duration-300 hover:shadow-md">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 
-                        {/* 1. Día (Tu componente CustomDatePicker) */}
+                        {/* Día con RESTRICCIONES */}
                         <div className="relative z-50">
                             <CustomDatePicker
-                                label="Día"
+                                label="Día (Lun-Vie)"
                                 value={filters.date}
                                 onChange={(val) => handleFilterUpdate('date', val)}
+                                minDate={minDate}         // No antes de hoy
+                                maxDate={maxDate}         // Máximo 7 días hábiles
+                                disableWeekends={true}    // Bloquear Sáb/Dom
                             />
                         </div>
 
-                        {/* 2. Hora (Tu componente CustomSelect) */}
+                        {/* 2. Hora */}
                         <div className="relative z-40">
                             <CustomSelect
-                                label="Hora"
+                                label="Hora *"
                                 value={filters.slotId}
                                 onChange={(val) => handleFilterUpdate('slotId', val)}
                                 options={timeOptions}
@@ -175,7 +206,6 @@ export default function StudyRooms() {
                         </div>
                     </div>
 
-                    {/* Botón Buscar */}
                     <div className="flex justify-end pt-2 border-t border-gray-50">
                         <button
                             onClick={handleSearch}
@@ -199,14 +229,15 @@ export default function StudyRooms() {
                         </button>
                     </div>
 
+                    {/* MENSAJE DE ERROR O VALIDACIÓN */}
                     {error && (
-                        <div className="mt-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm text-center border border-red-100">
+                        <div className="mt-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm font-medium text-center border border-red-100 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-1">
+                            <SmileySadIcon size={20} />
                             {error}
                         </div>
                     )}
                 </section>
 
-                {/* --- RESULTADOS --- */}
                 <section>
                     <h2 className="text-xl font-bold text-[#1a1a1a] mb-6 flex items-center gap-2">
                         Resultados de Búsqueda
@@ -220,7 +251,6 @@ export default function StudyRooms() {
                     <div className="space-y-4 relative z-0 pb-12">
                         {results.length > 0 ? (
                             results.map((room, index) => (
-                                // ANIMACIÓN: Usamos delay basado en el índice para efecto cascada
                                 <div
                                     key={room.id}
                                     className="
@@ -233,9 +263,7 @@ export default function StudyRooms() {
                                     "
                                     style={{ animationDelay: `${index * 100}ms` }}
                                 >
-                                    {/* Info Izquierda */}
                                     <div className="flex items-center gap-5 flex-1 w-full">
-                                        {/* Icono Sala */}
                                         <div className="h-14 w-14 min-w-[56px] rounded-xl bg-[#eef6ff] flex items-center justify-center text-[#0a3fa6]">
                                             <DoorOpenIcon size={28} weight="duotone" />
                                         </div>
@@ -256,38 +284,26 @@ export default function StudyRooms() {
                                         </div>
                                     </div>
 
-                                    {/* Estado Derecha */}
                                     <div className="flex items-center justify-between w-full md:w-auto border-t md:border-t-0 border-gray-100 pt-4 md:pt-0 mt-2 md:mt-0">
                                         <div className="flex items-center gap-2 text-green-600 font-semibold text-sm bg-green-50 px-4 py-2 rounded-full">
                                             <CheckCircleIcon size={18} weight="fill" />
                                             <span>Disponible</span>
                                         </div>
-
-                                        {/* Botón Reservar (Opcional, si quieres acción directa aquí) */}
-                                        {/* <button className="ml-4 text-blue-600 font-medium hover:underline text-sm">
-                                            Reservar
-                                        </button>
-                                        */}
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            // ESTADO VACÍO
                             <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
                                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-4 text-gray-400">
-                                    {hasSearched ? (
-                                        <SmileySadIcon size={32} />
-                                    ) : (
-                                        <MagnifyingGlassIcon size={32} />
-                                    )}
+                                    {hasSearched ? <SmileySadIcon size={32} /> : <MagnifyingGlassIcon size={32} />}
                                 </div>
                                 <h3 className="text-lg font-medium text-gray-900">
                                     {hasSearched ? "No se encontraron salas" : "Realiza una búsqueda"}
                                 </h3>
                                 <p className="text-gray-500 mt-1 max-w-md mx-auto">
                                     {hasSearched
-                                        ? "Intenta cambiar los filtros de hora o capacidad para encontrar resultados."
-                                        : "Selecciona una fecha y hora para ver las salas disponibles."
+                                        ? "Intenta cambiar los filtros de capacidad o recursos."
+                                        : "Selecciona una fecha y una hora obligatoria para ver las salas disponibles."
                                     }
                                 </p>
                             </div>

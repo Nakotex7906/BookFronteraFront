@@ -5,13 +5,23 @@ interface CustomDatePickerProps {
     label?: string;
     value: string; // Formato YYYY-MM-DD
     onChange: (date: string) => void;
+    minDate?: string;
+    maxDate?: string;
+    disableWeekends?: boolean;
 }
 
-export function CustomDatePicker({ label, value, onChange }: CustomDatePickerProps) {
+export function CustomDatePicker({
+                                     label,
+                                     value,
+                                     onChange,
+                                     minDate,
+                                     maxDate,
+                                     disableWeekends = false
+                                 }: CustomDatePickerProps) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Inicializamos viewDate evitando desfases horarios: usamos T12:00:00
+    // Inicializamos viewDate evitando desfases horarios
     const [viewDate, setViewDate] = useState(() => {
         const d = value ? new Date(value + "T12:00:00") : new Date();
         return isNaN(d.getTime()) ? new Date() : d;
@@ -27,7 +37,6 @@ export function CustomDatePicker({ label, value, onChange }: CustomDatePickerPro
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // --- Lógica del Calendario ---
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
 
@@ -45,8 +54,9 @@ export function CustomDatePicker({ label, value, onChange }: CustomDatePickerPro
         setViewDate(new Date(newDate));
     };
 
-    const handleDaySelect = (day: number) => {
-        // Construimos manualmente el string YYYY-MM-DD
+    const handleDaySelect = (day: number, isDisabled: boolean) => {
+        if (isDisabled) return; // Bloquear acción si está deshabilitado
+
         const yyyy = year;
         const mm = String(month + 1).padStart(2, '0');
         const dd = String(day).padStart(2, '0');
@@ -57,7 +67,28 @@ export function CustomDatePicker({ label, value, onChange }: CustomDatePickerPro
     const formatDateDisplay = (isoDate: string) => {
         if (!isoDate) return "Seleccionar fecha";
         const [y, m, d] = isoDate.split("-");
-        return `${d}/${m}/${y}`; // DD/MM/YYYY
+        return `${d}/${m}/${y}`;
+    };
+
+    // Función auxiliar para verificar si un día está deshabilitado
+    const isDateDisabled = (day: number) => {
+        const currentIso = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dateObj = new Date(year, month, day);
+        const dayOfWeek = dateObj.getDay(); // 0 Dom, 6 Sab
+
+        // Validar Fin de Semana
+        if (disableWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+            return true;
+        }
+        // Validar MinDate
+        if (minDate && currentIso < minDate) {
+            return true;
+        }
+        // Validar MaxDate
+        if (maxDate && currentIso > maxDate) {
+            return true;
+        }
+        return false;
     };
 
     return (
@@ -68,7 +99,6 @@ export function CustomDatePicker({ label, value, onChange }: CustomDatePickerPro
                 </label>
             )}
 
-            {/* Botón Trigger */}
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
@@ -90,7 +120,6 @@ export function CustomDatePicker({ label, value, onChange }: CustomDatePickerPro
                 </span>
             </button>
 
-            {/* Dropdown Calendario */}
             <div
                 className={`
                     absolute z-[70] mt-2 w-[280px] rounded-2xl bg-white p-4 shadow-xl ring-1 ring-black/5
@@ -101,7 +130,6 @@ export function CustomDatePicker({ label, value, onChange }: CustomDatePickerPro
                 }
                 `}
             >
-                {/* Header: Mes y Navegación */}
                 <div className="flex items-center justify-between mb-4 px-1">
                     <button onClick={() => changeMonth(-1)} className="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
                         <CaretLeftIcon size={16} weight="bold" />
@@ -114,14 +142,12 @@ export function CustomDatePicker({ label, value, onChange }: CustomDatePickerPro
                     </button>
                 </div>
 
-                {/* Grid: Días de la semana */}
                 <div className="grid grid-cols-7 gap-1 mb-2 text-center">
                     {dayNames.map(d => (
                         <span key={d} className="text-[0.7rem] font-bold text-gray-400 uppercase tracking-wider">{d}</span>
                     ))}
                 </div>
 
-                {/* Grid: Días */}
                 <div className="grid grid-cols-7 gap-1 text-center">
                     {emptySlots.map((_, i) => (
                         <div key={`empty-${i}`} />
@@ -130,23 +156,31 @@ export function CustomDatePicker({ label, value, onChange }: CustomDatePickerPro
                     {days.map(d => {
                         const currentIso = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                         const isSelected = value === currentIso;
+                        const isDisabled = isDateDisabled(d);
 
-                        // Comprobar si es "Hoy" para resaltarlo sutilmente
                         const today = new Date();
                         const isToday = today.getDate() === d && today.getMonth() === month && today.getFullYear() === year;
+
+                        // Clases base
+                        let classes = "h-8 w-8 rounded-full text-sm flex items-center justify-center transition-all duration-200 ";
+
+                        // Lógica de estilos
+                        if (isDisabled) {
+                            classes += "text-gray-300 cursor-not-allowed bg-transparent";
+                        } else if (isSelected) {
+                            classes += "bg-[#0a3fa6] text-white shadow-md font-bold scale-105";
+                        } else if (isToday) {
+                            classes += "text-[#0a3fa6] font-bold bg-blue-50 border border-blue-200 hover:bg-blue-100";
+                        } else {
+                            classes += "text-gray-700 hover:bg-gray-100 hover:text-gray-900";
+                        }
 
                         return (
                             <button
                                 key={d}
-                                onClick={() => handleDaySelect(d)}
-                                className={`
-                                    h-8 w-8 rounded-full text-sm flex items-center justify-center transition-all duration-200
-                                    ${isSelected
-                                    ? "bg-[#0a3fa6] text-white shadow-md font-bold scale-105"
-                                    : isToday
-                                        ? "text-[#0a3fa6] font-bold bg-blue-50 border border-blue-200"
-                                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"}
-                                `}
+                                onClick={() => handleDaySelect(d, isDisabled)}
+                                disabled={isDisabled}
+                                className={classes}
                             >
                                 {d}
                             </button>
