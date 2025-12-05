@@ -26,6 +26,7 @@ type Props = {
         room: { imageUrl?: string; name: string }
     };
     onCancel: (id: number) => void;
+    onEdit?: (reservation: ReservationDetail) => void;
     isCancelling?: boolean;
     showActions?: boolean;
     layout?: 'default' | 'horizontal' | 'vertical';
@@ -40,11 +41,12 @@ const btnModify = `bg-blue-100 text-blue-700 hover:bg-blue-200 ${btnBase} disabl
 const btnCancel = `bg-red-100 text-red-600 hover:bg-red-200 ${btnBase} disabled:opacity-70`;
 
 // --- CORRECCIÓN AQUÍ: Quité 'onCancel' de los props, ya que no se usaba ---
-const ActionButtons = ({ isCancelling, handleCancelClick, isVertical = false }: any) => (
+const ActionButtons = ({ isCancelling, handleCancelClick, onEditClick, isVertical = false }: any) => (
     <div className={`flex items-center gap-2 ${isVertical ? 'w-full mt-auto' : 'mt-4'}`}>
         <button
             className={`${btnModify} ${isVertical ? 'w-full' : ''}`}
-            disabled={true}
+            onClick={onEditClick}
+            disabled={!onEditClick}
         >
             <span className="material-symbols-outlined text-base"></span>
             <span>Modificar</span>
@@ -92,6 +94,7 @@ const ReservationImage = ({ imageUrl, alt, className }: any) => (
 export function ReservationCard({
                                     reservation,
                                     onCancel,
+                                    onEdit,
                                     isCancelling = false,
                                     showActions = true,
                                     layout = 'default'
@@ -104,6 +107,10 @@ export function ReservationCard({
     };
 
     const { imageUrl, name } = reservation.room;
+
+    const handleEditClick = () => {
+        if (onEdit) onEdit(reservation);
+    };
 
     // --- Layout: 'vertical' (Para Reservas Futuras) ---
     if (layout === 'vertical') {
@@ -121,6 +128,7 @@ export function ReservationCard({
                     <ActionButtons
                         isCancelling={isCancelling}
                         handleCancelClick={handleCancelClick}
+                        onEditClick={handleEditClick}
                         isVertical={true}
                     />
                 )}
@@ -138,6 +146,7 @@ export function ReservationCard({
                         <ActionButtons
                             isCancelling={isCancelling}
                             handleCancelClick={handleCancelClick}
+                            onEditClick={handleEditClick}
                         />
                     )}
                 </div>
@@ -164,6 +173,7 @@ export function ReservationCard({
                     <ActionButtons
                         isCancelling={isCancelling}
                         handleCancelClick={handleCancelClick}
+                        onEditClick={handleEditClick}
                     />
                 </div>
             )}

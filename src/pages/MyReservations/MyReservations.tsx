@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AvailabilityApi } from "../../services/AvailabilityApi";
 import type { ReservationDetail } from "../../types/schedule";
 import { ReservationCard } from "../../components/ReservationCard/ReservationCard";
+import EditReservationModal from "../../components/EditModal/EditReservationModal";
 
 export default function MyReservations() {
     // Estado para cada lista
@@ -13,6 +14,9 @@ export default function MyReservations() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [cancellingId, setCancellingId] = useState<number | null>(null);
+
+    // 2Estado para controlar qué reserva se está editando
+    const [editingReservation, setEditingReservation] = useState<ReservationDetail | null>(null);
 
     // Función para cargar los datos
     const fetchReservations = async () => {
@@ -48,6 +52,17 @@ export default function MyReservations() {
         }
     };
 
+    //  Handler para abrir el modal al hacer clic en "Modificar"
+    const handleEdit = (reservation: ReservationDetail) => {
+        setEditingReservation(reservation);
+    };
+
+    // Handler para recargar datos tras una edición exitosa
+    const handleUpdateSuccess = () => {
+        // Podrías mostrar un toast/alerta aquí
+        fetchReservations();
+    };
+
     if (isLoading) {
         return <div className="p-8 text-center">Cargando tus reservas...</div>;
     }
@@ -72,6 +87,7 @@ export default function MyReservations() {
                         <ReservationCard
                             reservation={current}
                             onCancel={handleCancel}
+                            onEdit={handleEdit}
                             isCancelling={cancellingId === current.id}
                             layout="horizontal"
                             showActions={true}
@@ -91,6 +107,7 @@ export default function MyReservations() {
                                     key={res.id}
                                     reservation={res}
                                     onCancel={handleCancel}
+                                    onEdit={handleEdit}
                                     isCancelling={cancellingId === res.id}
                                     layout="vertical"
                                     showActions={true}
@@ -123,6 +140,15 @@ export default function MyReservations() {
                     )}
                 </section>
             </div>
+            {/* Renderizar el Modal Condicionalmente */}
+            {editingReservation && (
+                <EditReservationModal
+                    isOpen={!!editingReservation}
+                    onClose={() => setEditingReservation(null)}
+                    reservation={editingReservation}
+                    onUpdateSuccess={handleUpdateSuccess}
+                />
+            )}
         </main>
     );
 }

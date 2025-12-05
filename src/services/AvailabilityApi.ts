@@ -89,4 +89,25 @@ export class AvailabilityApi {
         }
     }
 
+    /**
+     * Modifica una reserva existente.
+     * @param id El ID de la reserva a modificar.
+     * @param payload Los nuevos datos (roomId, fechas, etc.).
+     */
+    static async updateReservation(
+        id: number,
+        payload: ReservationRequest
+    ): Promise<ReservationDetail> {
+        try {
+            // Llamamos al nuevo endpoint PUT del backend
+            const { data } = await http.put<ReservationDetail>(
+                `/reservations/${id}`,
+                payload
+            );
+            return data;
+        } catch (e) {
+            throw new Error(errorMessage(e));
+        }
+    }
+
 }
