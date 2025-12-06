@@ -147,7 +147,7 @@ export default function Home() {
         setBehalfEmail(""); // Limpiar email al cerrar
     };
 
-    const modalRoomName = rooms.find(r => r.id === selectedBooking?.roomId)?.name;
+    const modalRoomName = rooms.find(r => String(r.id) === String(selectedBooking?.roomId))?.name;
     const modalSlotLabel = slots.find(s => s.id === selectedBooking?.slotId)?.label;
 
     return (
