@@ -119,7 +119,7 @@ export default function Home() {
             }
 
             // Redirección de éxito
-            const roomInfo = rooms.find(r => r.id === selectedBooking.roomId);
+            const roomInfo = rooms.find(r => String(r.id) === String(selectedBooking.roomId));
             const params = new URLSearchParams();
             params.append("room", roomInfo?.name ?? selectedBooking.roomId);
             params.append("start", startAtISO);
