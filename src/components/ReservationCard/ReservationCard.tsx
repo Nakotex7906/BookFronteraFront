@@ -100,11 +100,9 @@ export function ReservationCard({
                                     layout = 'default'
                                 }: Props) {
 
-    const handleCancelClick = () => {
-        if (window.confirm("¿Estás seguro de que quieres cancelar esta reserva?")) {
-            onCancel(reservation.id);
-        }
-    };
+  const handleCancelClick = () =>{
+      onCancel(reservation.id);
+  }
 
     const { imageUrl, name } = reservation.room;
 

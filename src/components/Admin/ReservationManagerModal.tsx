@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
-import { XIcon, TrashIcon, CalendarBlankIcon, UserIcon, ClockIcon, SmileySadIcon } from '@phosphor-icons/react';
+import {
+    XIcon,
+    TrashIcon,
+    CalendarBlankIcon,
+    UserIcon,
+    ClockIcon,
+    SmileySadIcon
+} from '@phosphor-icons/react';
 import { AvailabilityApi } from '../../services/AvailabilityApi';
 import type { ReservationDetail } from '../../types/schedule';
+import { ConfirmModal } from '../ConfirmModal/ConfirmModal';
 
 interface Props {
     isOpen: boolean;
@@ -14,7 +22,11 @@ export default function ReservationManagerModal({ isOpen, onClose, roomId, roomN
     const [reservations, setReservations] = useState<ReservationDetail[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Cargar reservas cuando se abre el modal
+    // Estados para el Modal de Borrado
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [reservationToDelete, setReservationToDelete] = useState<ReservationDetail | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     useEffect(() => {
         if (isOpen && roomId) {
             loadReservations();
@@ -34,20 +46,27 @@ export default function ReservationManagerModal({ isOpen, onClose, roomId, roomN
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!window.confirm("¿Seguro que deseas eliminar esta reserva? Esta acción liberará el horario.")) return;
+    const handleDeleteClick = (reservation: ReservationDetail) => {
+        setReservationToDelete(reservation);
+        setIsDeleteModalOpen(true);
+    };
 
+    const confirmDelete = async () => {
+        if (!reservationToDelete) return;
+
+        setIsDeleting(true);
         try {
-            // El backend ya permite esto si eres ADMIN
-            await AvailabilityApi.cancelReservation(id);
-            // Recargamos la lista para ver los cambios
-            loadReservations();
+            await AvailabilityApi.cancelReservation(reservationToDelete.id);
+            setIsDeleteModalOpen(false);
+            setReservationToDelete(null);
+            await loadReservations();
         } catch (error) {
             alert("Error al eliminar la reserva. Verifica tu conexión.");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
-    // Helpers de formato
     const formatDate = (iso: string) => new Date(iso).toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' });
     const formatTime = (start: string, end: string) => {
         const s = new Date(start).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
@@ -88,7 +107,6 @@ export default function ReservationManagerModal({ isOpen, onClose, roomId, roomN
                             {reservations.map((res) => (
                                 <div key={res.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all">
 
-                                    {/* Info Reserva */}
                                     <div className="flex flex-col gap-1.5">
                                         <div className="flex items-center gap-2 text-sm font-bold text-[#0a3fa6]">
                                             <CalendarBlankIcon weight="fill" className="text-blue-500"/>
@@ -107,9 +125,8 @@ export default function ReservationManagerModal({ isOpen, onClose, roomId, roomN
                                         </div>
                                     </div>
 
-                                    {/* Botón Eliminar */}
                                     <button
-                                        onClick={() => handleDelete(res.id)}
+                                        onClick={() => handleDeleteClick(res)}
                                         className="group p-2.5 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded-xl transition-all shadow-sm"
                                         title="Cancelar y eliminar reserva"
                                     >
@@ -121,6 +138,43 @@ export default function ReservationManagerModal({ isOpen, onClose, roomId, roomN
                     )}
                 </div>
             </div>
+
+            {/* Modal de Confirmación */}
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Eliminar Reserva"
+                isLoading={isDeleting}
+                showGoogleCalendarCheck={false}
+            >
+                <div className="flex flex-col gap-2">
+                    <p>
+                        ¿Estás seguro de que deseas eliminar la reserva de
+                        <strong className="text-gray-900"> {reservationToDelete?.user.nombre}</strong>?
+                    </p>
+
+                    <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200 mt-2 space-y-2">
+                        <div className="flex items-center gap-3">
+                            <CalendarBlankIcon size={20} className="text-blue-500 shrink-0" weight="duotone" />
+                            <span className="font-medium capitalize">
+                                {reservationToDelete ? formatDate(reservationToDelete.startAt) : ''}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <ClockIcon size={20} className="text-blue-500 shrink-0" weight="duotone" />
+                            <span className="font-medium">
+                                {reservationToDelete ? formatTime(reservationToDelete.startAt, reservationToDelete.endAt) : ''}
+                            </span>
+                        </div>
+                    </div>
+
+                    <p className="text-xs text-red-500 mt-1 px-1">
+                        Esta acción liberará el horario inmediatamente.
+                    </p>
+                </div>
+            </ConfirmModal>
+
         </div>
     );
 }

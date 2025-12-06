@@ -25,6 +25,8 @@ const ReservationSuccess: React.FC<Props> = ({
     const startString = startISO ?? params.get("start") ?? new Date().toISOString();
     const endString = endISO ?? params.get("end") ?? new Date().toISOString();
 
+    const behalfEmail = params.get("behalf");
+
     // Creamos las fechas
     const startDate = new Date(startString);
     const endDate = new Date(endString);
@@ -83,7 +85,15 @@ const ReservationSuccess: React.FC<Props> = ({
                 </h1>
 
                 <p className="mx-auto mb-8 max-w-[45ch] text-lg text-[#64748b] leading-relaxed">
-                    Has reservado la sala <strong className="text-[#0f172a]">{roomName}</strong> exitosamente.
+                    {behalfEmail ? (
+                        <>
+                            Has reservado la sala <strong className="text-[#0f172a]">{roomName}</strong> exitosamente para el estudiante <strong className="text-[#0a3fa6]">{behalfEmail}</strong>.
+                        </>
+                    ) : (
+                        <>
+                            Has reservado la sala <strong className="text-[#0f172a]">{roomName}</strong> exitosamente.
+                        </>
+                    )}
                 </p>
 
                 {/* Detalles de la Reserva */}

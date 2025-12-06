@@ -61,4 +61,5 @@ export type ReservationOnBehalfRequest = {
     startAt: string;
     endAt: string;
     othersEmail: string;
+    addToGoogleCalendar: boolean;
 };

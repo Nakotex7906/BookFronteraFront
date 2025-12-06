@@ -159,7 +159,8 @@ export default function StudyRooms() {
                     roomId: String(selectedRoom.id), // Aseguramos string
                     startAt: startAtISO,
                     endAt: endAtISO,
-                    othersEmail: behalfEmail.trim()
+                    othersEmail: behalfEmail.trim(),
+                    addToGoogleCalendar:addToGoogle
                 });
             } else {
                 await AvailabilityApi.createReservation({
@@ -175,6 +176,9 @@ export default function StudyRooms() {
             params.append("start", startAtISO);
             params.append("end", endAtISO);
 
+            if (behalfEmail.trim() !== "") {
+                params.append("behalf", behalfEmail.trim());
+            }
             setIsModalOpen(false);
             navigate(`/reservation-success?${params.toString()}`);
 
@@ -368,21 +372,29 @@ export default function StudyRooms() {
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 onConfirm={handleConfirmBooking}
-                title="Confirmar Reserva"
+                title={behalfEmail ? "Reservar para Estudiante" : "Confirmar Reserva"}
                 isLoading={isBooking}
                 error={bookingError}
-                // Si hay behalfEmail, ocultamos Google Calendar (igual que en Home)
-                showGoogleCalendarCheck={!behalfEmail}
+                showGoogleCalendarCheck={true}
                 googleCalendarChecked={addToGoogle}
                 onGoogleCalendarChange={setAddToGoogle}
             >
                 <div className="flex flex-col gap-5">
-                    <p>
-                        ¿Estás seguro de que quieres reservar la sala
-                        <strong> {selectedRoom?.name ?? ''}</strong> para el día
-                        <strong> {filters.date} </strong>
-                        en el horario
-                        <strong> {slotLabel ?? ''}</strong>?
+                    <p className="text-gray-600">
+                        {behalfEmail ? (
+                            <span>
+                                ¿Estás seguro de crear una reserva para
+                                <strong className="text-[#0a3fa6]"> {behalfEmail}</strong>
+                            </span>
+                        ) : (
+                            <span>¿Estás seguro de que quieres reservar</span>
+                        )}
+                        <span> en la sala </span>
+                        <strong className="text-gray-900"> {selectedRoom?.name ?? ''}</strong>
+                        <span> para el día </span>
+                        <strong className="text-gray-900"> {filters.date} </strong>
+                        <span> en el horario </span>
+                        <strong className="text-gray-900"> {slotLabel ?? ''}</strong>?
                     </p>
 
                     {/* SECCIÓN EXCLUSIVA ADMIN */}
@@ -398,11 +410,12 @@ export default function StudyRooms() {
                                 onChange={(e) => setBehalfEmail(e.target.value)}
                                 className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-blue-300"
                             />
-                            <p className="text-[11px] text-blue-600 mt-1.5 leading-tight">
-                                * Si dejas este campo vacío, la reserva quedará a tu nombre.
-                                <br />
-                                * Las reservas a nombre de terceros no se sincronizan con Google Calendar.
-                            </p>
+                            <div className="text-[11px] text-blue-600 mt-2 space-y-1">
+                                <p>• Si dejas este campo vacío, la reserva quedará a tu nombre.</p>
+                                <p className="font-medium">
+                                    • Se sincronizará con el Google Calendar del estudiante si este tiene cuenta activa en BookFrontera.
+                                </p>
+                            </div>
                         </div>
                     )}
                 </div>

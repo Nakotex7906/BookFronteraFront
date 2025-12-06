@@ -3,6 +3,7 @@ import { AvailabilityApi } from "../../services/AvailabilityApi";
 import type { ReservationDetail } from "../../types/schedule";
 import { ReservationCard } from "../../components/ReservationCard/ReservationCard";
 import EditReservationModal from "../../components/EditModal/EditReservationModal";
+import { ConfirmModal } from "../../components/ConfirmModal/ConfirmModal";
 
 export default function MyReservations() {
     // Estado para cada lista
@@ -17,6 +18,10 @@ export default function MyReservations() {
 
     // 2Estado para controlar qué reserva se está editando
     const [editingReservation, setEditingReservation] = useState<ReservationDetail | null>(null);
+
+    // NUEVOS ESTADOS PARA EL MODAL DE CANCELACIÓN
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [reservationToCancel, setReservationToCancel] = useState<ReservationDetail | null>(null);
 
     // Función para cargar los datos
     const fetchReservations = async () => {
@@ -40,11 +45,32 @@ export default function MyReservations() {
     }, []);
 
     // Función para manejar la cancelación
-    const handleCancel = async (id: number) => {
-        setCancellingId(id);
+    const handleRequestCancel = (id: number) => {
+        // Buscamos la reserva completa para mostrar su nombre en el modal
+        const targetRes =
+            (current?.id === id ? current : null) ||
+            future.find(r => r.id === id);
+
+        if (targetRes) {
+            setReservationToCancel(targetRes);
+            setIsCancelModalOpen(true);
+        }
+    };
+
+    //  NUEVA FUNCIÓN QUE REALMENTE CANCELA (Se llama desde el Modal)
+    const handleConfirmCancel = async () => {
+        if (!reservationToCancel) return;
+
+        setCancellingId(reservationToCancel.id); // Activa el spinner en la tarjeta (opcional, o usamos isLoading del modal)
+
+        // Opcional: Podrías usar un estado local `isCancellingModal` para el spinner del botón del modal
+        // en lugar de `setCancellingId` de la tarjeta, pero mantendremos la lógica simple.
+
         try {
-            await AvailabilityApi.cancelReservation(id);
-            await fetchReservations(); // Recargar todo
+            await AvailabilityApi.cancelReservation(reservationToCancel.id);
+            setIsCancelModalOpen(false);
+            setReservationToCancel(null);
+            await fetchReservations();
         } catch (err: any) {
             alert(err.message || "Error al cancelar la reserva.");
         } finally {
@@ -86,7 +112,7 @@ export default function MyReservations() {
                     {current ? (
                         <ReservationCard
                             reservation={current}
-                            onCancel={handleCancel}
+                            onCancel={handleRequestCancel}
                             onEdit={handleEdit}
                             isCancelling={cancellingId === current.id}
                             layout="horizontal"
@@ -106,7 +132,7 @@ export default function MyReservations() {
                                 <ReservationCard
                                     key={res.id}
                                     reservation={res}
-                                    onCancel={handleCancel}
+                                    onCancel={handleRequestCancel}
                                     onEdit={handleEdit}
                                     isCancelling={cancellingId === res.id}
                                     layout="vertical"
@@ -149,6 +175,25 @@ export default function MyReservations() {
                     onUpdateSuccess={handleUpdateSuccess}
                 />
             )}
+            {/* MODAL DE CONFIRMACIÓN DE CANCELACIÓN */}
+            <ConfirmModal
+                isOpen={isCancelModalOpen}
+                onClose={() => setIsCancelModalOpen(false)}
+                onConfirm={handleConfirmCancel}
+                title="Cancelar Reserva"
+                isLoading={!!cancellingId} // Muestra loading si cancellingId tiene valor
+                showGoogleCalendarCheck={false}
+            >
+                <div className="flex flex-col gap-2">
+                    <p>
+                        ¿Estás seguro de que deseas cancelar tu reserva en la sala
+                        <strong className="text-gray-900"> {reservationToCancel?.room.name}</strong>?
+                    </p>
+                    <p className="text-sm text-gray-500">
+                        Esta acción liberará el horario para otros estudiantes inmediatamente.
+                    </p>
+                </div>
+            </ConfirmModal>
         </main>
     );
 }

@@ -105,7 +105,8 @@ export default function Home() {
                     roomId: selectedBooking.roomId,
                     startAt: startAtISO,
                     endAt: endAtISO,
-                    othersEmail: behalfEmail.trim()
+                    othersEmail: behalfEmail.trim(),
+                    addToGoogleCalendar:addToGoogle
                 });
             } else {
                 // Flujo normal (se reserva a sí mismo)
@@ -123,6 +124,9 @@ export default function Home() {
             params.append("room", roomInfo?.name ?? selectedBooking.roomId);
             params.append("start", startAtISO);
             params.append("end", endAtISO);
+            if (behalfEmail.trim() !== "") {
+                params.append("behalf", behalfEmail.trim());
+            }
 
             setIsModalOpen(false);
             navigate(`/reservation-success?${params.toString()}`);
@@ -213,41 +217,48 @@ export default function Home() {
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 onConfirm={handleConfirmBooking}
-                title="Confirmar Reserva"
+                title={behalfEmail ? "Reservar para Estudiante" : "Confirmar Reserva"}
                 isLoading={isBooking}
                 error={bookingError}
-                // Si está reservando para otro (behalfEmail tiene texto), ocultamos el checkbox de GCalendar
-                // para evitar confusión (ya que no se agregará al calendario del admin).
-                showGoogleCalendarCheck={!behalfEmail}
+                showGoogleCalendarCheck={true}
                 googleCalendarChecked={addToGoogle}
                 onGoogleCalendarChange={setAddToGoogle}
             >
                 <div className="flex flex-col gap-5">
-                    <p>
-                        ¿Estás seguro de que quieres reservar la sala
-                        <strong> {modalRoomName ?? ''}</strong> para el día
-                        <strong> {selectedDateISO} </strong>
-                        en el horario
-                        <strong> {modalSlotLabel ?? ''}</strong>?
+                    <p className="text-gray-600">
+                        {behalfEmail ? (
+                            <span>
+                                ¿Estás seguro de crear una reserva para
+                                <strong className="text-[#0a3fa6]"> {behalfEmail}</strong>
+                            </span>
+                        ) : (
+                            <span>¿Estás seguro de que quieres reservar</span>
+                        )}
+                        <span> en la sala </span>
+                        <strong className="text-gray-900"> {modalRoomName ?? ''}</strong>
+                        <span> para el día </span>
+                        <strong className="text-gray-900"> {selectedDateISO} </strong>
+                        <span> en el horario </span>
+                        <strong className="text-gray-900"> {modalSlotLabel ?? ''}</strong>?
                     </p>
 
                     {/* SECCIÓN EXCLUSIVA ADMIN: Reservar para otro */}
                     {user?.rol === 'ADMIN' && (
                         <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-left animate-in fade-in zoom-in-95">
                             <label className="block text-xs font-bold text-blue-800 uppercase mb-2">
-                                 Opción Admin: Reservar para estudiante
+                                Opción Admin: Reservar para estudiante
                             </label>
                             <input
                                 type="email"
                                 placeholder="ejemplo@ufromail.cl"
                                 value={behalfEmail}
                                 onChange={(e) => setBehalfEmail(e.target.value)}
-                                className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-blue-300"
+                                className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-blue-300 mb-2"
                             />
-                            <p className="text-[11px] text-blue-600 mt-1.5 leading-tight">
-                                * Si dejas este campo vacío, la reserva quedará a tu nombre.
-                                <br />
-                                * Las reservas a nombre de terceros no se sincronizan con Google Calendar.
+                            <p className="text-[11px] text-blue-600 leading-tight">
+                                {behalfEmail ?
+                                    "Nota: Si marcas la casilla de abajo, se intentará agregar al calendario del estudiante (si tiene cuenta)." :
+                                    "Si dejas este campo vacío, la reserva será a tu nombre."}
                             </p>
                         </div>
                     )}

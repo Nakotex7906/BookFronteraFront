@@ -15,6 +15,7 @@ import { RoomApi, type Room, type RoomDto } from '../../services/RoomApi';
 import RoomModal from '../../components/Admin/RoomModal';
 import ImageModal from '../../components/Admin/ImageModal';
 import ReservationManagerModal from '../../components/Admin/ReservationManagerModal';
+import { ConfirmModal } from '../../components/ConfirmModal/ConfirmModal';
 
 const ResourceIcon = ({ name }: { name: string }) => {
     const n = name.toLowerCase();
@@ -34,10 +35,14 @@ const AdminPanelPage = () => {
     const [editingRoom, setEditingRoom] = useState<RoomDto | null>(null);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [viewingImageUrl, setViewingImageUrl] = useState<string | undefined>(undefined);
+    //  NUEVOS ESTADOS PARA LA ELIMINACIÓN
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [roomToDelete, setRoomToDelete] = useState<{ id: number, name: string } | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // GESTIÓN DE RESERVAS
     const [isResManagerOpen, setIsResManagerOpen] = useState(false);
-    const [selectedRoomForRes, setSelectedRoomForRes] = useState<{id: number, name: string} | null>(null);
+    const [selectedRoomForRes, setSelectedRoomForRes] = useState<{ id: number, name: string } | null>(null);
 
     const loadRooms = async () => {
         setIsLoading(true);
@@ -75,14 +80,27 @@ const AdminPanelPage = () => {
         setIsRoomModalOpen(true);
     };
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm("¿Estás seguro de eliminar esta sala? Esta acción es irreversible.")) {
-            try {
-                await RoomApi.delete(id);
-                loadRooms();
-            } catch (error) {
-                alert("Error al eliminar la sala.");
-            }
+    // handleDelete: AHORA SOLO ABRE EL MODAL
+    const handleDeleteClick = (room: Room) => {
+        setRoomToDelete({ id: room.id, name: room.name });
+        setIsDeleteModalOpen(true);
+    };
+
+    // NUEVA FUNCIÓN PARA CONFIRMAR LA ELIMINACIÓN (Se llama desde el Modal)
+    const confirmDelete = async () => {
+        if (!roomToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            await RoomApi.delete(roomToDelete.id);
+            await loadRooms();
+            setIsDeleteModalOpen(false); // Cerrar modal solo si tuvo éxito
+            setRoomToDelete(null);
+        } catch (error) {
+            console.error("Error eliminando sala:", error);
+            alert("Error al eliminar la sala. Verifica que no tenga reservas activas.");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -244,7 +262,7 @@ const AdminPanelPage = () => {
                                                     <PencilSimpleLineIcon size={18} weight="bold" />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(room.id)}
+                                                    onClick={() => handleDeleteClick(room)}
                                                     className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                                                     title="Eliminar sala"
                                                 >
@@ -281,6 +299,25 @@ const AdminPanelPage = () => {
                 roomId={selectedRoomForRes?.id ?? null}
                 roomName={selectedRoomForRes?.name ?? ''}
             />
+            {/*  NUEVO MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Eliminar Sala"
+                isLoading={isDeleting}
+                showGoogleCalendarCheck={false} // No aplica aquí
+            >
+                <div className="flex flex-col gap-2">
+                    <p>
+                        ¿Estás seguro de que deseas eliminar la sala
+                        <strong className="text-gray-900"> {roomToDelete?.name}</strong>?
+                    </p>
+                    <p className="text-xs text-red-500 bg-red-50 p-3 rounded-lg border border-red-100">
+                        Esta acción es irreversible y eliminará todas las reservas futuras asociadas a esta sala.
+                    </p>
+                </div>
+            </ConfirmModal>
         </main>
     );
 };
