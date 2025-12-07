@@ -306,6 +306,7 @@ const AdminPanelPage = () => {
                 onConfirm={confirmDelete}
                 title="Eliminar Sala"
                 isLoading={isDeleting}
+                loadingText="Eliminando..."
                 showGoogleCalendarCheck={false} // No aplica aquí
             >
                 <div className="flex flex-col gap-2">

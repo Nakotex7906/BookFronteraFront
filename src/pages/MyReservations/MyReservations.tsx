@@ -183,6 +183,7 @@ export default function MyReservations() {
                 title="Cancelar Reserva"
                 isLoading={!!cancellingId} // Muestra loading si cancellingId tiene valor
                 showGoogleCalendarCheck={false}
+                loadingText= "Cargando..."
             >
                 <div className="flex flex-col gap-2">
                     <p>

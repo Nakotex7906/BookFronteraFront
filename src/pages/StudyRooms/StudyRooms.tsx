@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from "react-router-dom";
 import { CheckCircleIcon, MagnifyingGlassIcon, DoorOpenIcon, SmileySadIcon } from "@phosphor-icons/react";
 import { AvailabilityApi } from "../../services/AvailabilityApi";
@@ -16,6 +16,8 @@ const getLocalISOString = (date: Date): string => {
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
 };
+
+const UFRO_EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@ufromail\.cl$/;
 
 export default function StudyRooms() {
     const navigate = useNavigate();
@@ -43,6 +45,22 @@ export default function StudyRooms() {
         capacity: 'Cualquiera',
         resource: 'Cualquiera'
     });
+
+    const isEmailValid = useMemo(() => {
+        // Si está vacío es válido (porque significa que reserva para sí mismo)
+        if (behalfEmail.trim() === "") return true;
+
+        return (
+            behalfEmail.length <= 100 &&
+            UFRO_EMAIL_REGEX.test(behalfEmail)
+        );
+    }, [behalfEmail]);
+
+    //  Sanitización del input (evitar scripts < >)
+    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const sanitized = e.target.value.replace(/[<>]/g, "").trim();
+        setBehalfEmail(sanitized);
+    };
 
     const [results, setResults] = useState<Room[]>([]);
     const [hasSearched, setHasSearched] = useState(false);
@@ -138,6 +156,7 @@ export default function StudyRooms() {
 
     // CONFIRMAR RESERVA
     const handleConfirmBooking = async () => {
+        if (!isEmailValid) return;
         if (!selectedRoom || !data) return;
 
         setIsBooking(true);
@@ -374,17 +393,19 @@ export default function StudyRooms() {
                 onConfirm={handleConfirmBooking}
                 title={behalfEmail ? "Reservar para Estudiante" : "Confirmar Reserva"}
                 isLoading={isBooking}
+                loadingText="Reservando..."
                 error={bookingError}
                 showGoogleCalendarCheck={true}
                 googleCalendarChecked={addToGoogle}
                 onGoogleCalendarChange={setAddToGoogle}
+                onConfirmDisabled={!isEmailValid}
             >
                 <div className="flex flex-col gap-5">
                     <p className="text-gray-600">
                         {behalfEmail ? (
                             <span>
                                 ¿Estás seguro de crear una reserva para
-                                <strong className="text-[#0a3fa6]"> {behalfEmail}</strong>
+                                <strong className="text-[#0a3fa6] break-all"> {behalfEmail}</strong>
                             </span>
                         ) : (
                             <span>¿Estás seguro de que quieres reservar</span>
@@ -399,25 +420,30 @@ export default function StudyRooms() {
 
                     {/* SECCIÓN EXCLUSIVA ADMIN */}
                     {user?.rol === 'ADMIN' && (
-                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-left animate-in fade-in zoom-in-95">
-                            <label className="block text-xs font-bold text-blue-800 uppercase mb-2">
-                                Opción Admin: Reservar para estudiante
-                            </label>
-                            <input
-                                type="email"
-                                placeholder="ejemplo@ufromail.cl"
-                                value={behalfEmail}
-                                onChange={(e) => setBehalfEmail(e.target.value)}
-                                className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-blue-300"
-                            />
-                            <div className="text-[11px] text-blue-600 mt-2 space-y-1">
-                                <p>• Si dejas este campo vacío, la reserva quedará a tu nombre.</p>
-                                <p className="font-medium">
-                                    • Se sincronizará con el Google Calendar del estudiante si este tiene cuenta activa en BookFrontera.
-                                </p>
-                            </div>
-                        </div>
-                    )}
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-left animate-in fade-in zoom-in-95">
+                        <label className="block text-xs font-bold text-blue-800 uppercase mb-2">
+                            Opción Admin: Reservar para estudiante
+                        </label>
+                        <input
+                            type="email"
+                            placeholder="ejemplo@ufromail.cl"
+                            value={behalfEmail}
+                            onChange={handleEmailChange}
+                            maxLength={100}
+                            className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-blue-300 mb-2"
+                        />
+                        {!isEmailValid && (
+                            <p className="text-[12px] text-red-600 mt-2 font-bold ">
+                                El correo debe terminar en @ufromail.cl y tener máximo 100 caracteres.
+                            </p>
+                        )}
+                        <p className="text-[12px] text-blue-600 leading-tight">
+                            {behalfEmail ?
+                                "Nota: Si marcas la casilla de abajo, se intentará agregar al calendario del estudiante (si tiene cuenta)." :
+                                "Si dejas este campo vacío, la reserva será a tu nombre."}
+                        </p>
+                    </div>
+                )}
                 </div>
             </ConfirmModal>
         </main>

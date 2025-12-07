@@ -12,6 +12,8 @@ type Props = {
     showGoogleCalendarCheck?: boolean;
     googleCalendarChecked?: boolean;
     onGoogleCalendarChange?: (isChecked: boolean) => void;
+    onConfirmDisabled?: boolean;
+    loadingText?: string;
 };
 
 export const ConfirmModal: React.FC<Props> = ({
@@ -24,6 +26,8 @@ export const ConfirmModal: React.FC<Props> = ({
                                                   showGoogleCalendarCheck = false,
                                                   googleCalendarChecked = false,
                                                   onGoogleCalendarChange,
+                                                  onConfirmDisabled = false,
+                                                  loadingText = "Cargando...",
                                                   children,
                                               }) => {
     if (!isOpen) {
@@ -89,9 +93,9 @@ export const ConfirmModal: React.FC<Props> = ({
                     <button
                         className={`${baseButton} ${primaryButton}`}
                         onClick={onConfirm}
-                        disabled={isLoading}
+                        disabled={isLoading || onConfirmDisabled}
                     >
-                        {isLoading ? "Reservando..." : "Confirmar"}
+                        {isLoading ? loadingText : "Confirmar"}
                     </button>
                 </div>
             </div>

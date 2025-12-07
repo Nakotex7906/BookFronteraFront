@@ -1,12 +1,12 @@
-import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAvailability } from "../../hooks/useAvailability";
-import { Hero } from "../../components/Hero/Hero";
+import React, {useState, useMemo, useEffect} from "react";
+import {useNavigate} from "react-router-dom";
+import {useAvailability} from "../../hooks/useAvailability";
+import {Hero} from "../../components/Hero/Hero";
 import AvailabilityGrid from "../../components/Availability/AvailabilityGrid";
-import { Legend } from "../../components/Availability/Legend";
-import { useAuth } from "../../context/AuthContext";
-import { ConfirmModal } from "../../components/ConfirmModal/ConfirmModal";
-import { AvailabilityApi } from "../../services/AvailabilityApi";
+import {Legend} from "../../components/Availability/Legend";
+import {useAuth} from "../../context/AuthContext";
+import {ConfirmModal} from "../../components/ConfirmModal/ConfirmModal";
+import {AvailabilityApi} from "../../services/AvailabilityApi";
 
 // --- UTILIDADES PARA LOS DÍAS (Del código de navegación) ---
 const getLocalISOString = (date: Date): string => {
@@ -15,6 +15,9 @@ const getLocalISOString = (date: Date): string => {
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
 };
+
+// Definir la expresión regular para @ufromail.cl
+const UFRO_EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@ufromail\.cl$/;
 
 const getNextBusinessDays = (count: number) => {
     const days = [];
@@ -46,10 +49,10 @@ export default function Home() {
     );
 
     // 3. HOOK: Ahora depende de 'selectedDateISO'.
-    const { rooms, slots, matrix, loading } = useAvailability(selectedDateISO);
+    const {rooms, slots, matrix, loading} = useAvailability(selectedDateISO);
 
     const navigate = useNavigate();
-    const { user, openLoginModal } = useAuth();
+    const {user, openLoginModal} = useAuth();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<{ roomId: string; slotId: string } | null>(null);
@@ -68,9 +71,26 @@ export default function Home() {
     }, [selectedDateISO]);
 
     const handleSlotSelect = (roomId: string, slotId: string) => {
-        setSelectedBooking({ roomId, slotId });
+        setSelectedBooking({roomId, slotId});
         setIsModalOpen(true);
         setBookingError(null);
+    };
+
+    //  Crear una función de validación
+    const isEmailValid = useMemo(() => {
+        if (behalfEmail.trim() === "") return true; // Si está vacío, es reserva propia
+
+        return (
+            behalfEmail.length <= 100 && // demasiado largo
+            UFRO_EMAIL_REGEX.test(behalfEmail) // Formato institucional
+        );
+    }, [behalfEmail]);
+
+    //  Sanitizar entrada para prevenir scripts (Input)
+    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Eliminar espacios y caracteres que sugieran scripts (< >)
+        const sanitized = e.target.value.replace(/[<>]/g, "").trim();
+        setBehalfEmail(sanitized);
     };
 
     const handleConfirmBooking = async () => {
@@ -79,6 +99,7 @@ export default function Home() {
             return;
         }
         if (!selectedBooking) return;
+        if (!isEmailValid) return;
 
         setIsBooking(true);
         setBookingError(null);
@@ -106,7 +127,7 @@ export default function Home() {
                     startAt: startAtISO,
                     endAt: endAtISO,
                     othersEmail: behalfEmail.trim(),
-                    addToGoogleCalendar:addToGoogle
+                    addToGoogleCalendar: addToGoogle
                 });
             } else {
                 // Flujo normal (se reserva a sí mismo)
@@ -152,7 +173,7 @@ export default function Home() {
 
     return (
         <main>
-            <Hero />
+            <Hero/>
             <section className="mx-auto max-w-[1200px] px-8 py-16">
                 <h2 className="mb-8 text-center text-4xl font-bold text-[#1a1a1a]">
                     Disponibilidad de Salas
@@ -195,7 +216,8 @@ export default function Home() {
                 {/* --- GRILLA CON OVERLAY DE CARGA --- */}
                 <div className="relative min-h-[300px]">
                     {loading && (
-                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
+                        <div
+                            className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
                             <p className="text-sm font-bold text-[#0052cc]">Cargando disponibilidad...</p>
                         </div>
                     )}
@@ -207,7 +229,7 @@ export default function Home() {
                             data={matrix}
                             onSelect={handleSlotSelect}
                         />
-                        <Legend />
+                        <Legend/>
                     </div>
                 </div>
             </section>
@@ -217,19 +239,21 @@ export default function Home() {
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 onConfirm={handleConfirmBooking}
+                onConfirmDisabled={!isEmailValid}
                 title={behalfEmail ? "Reservar para Estudiante" : "Confirmar Reserva"}
                 isLoading={isBooking}
+                loadingText="Reservando..."
                 error={bookingError}
                 showGoogleCalendarCheck={true}
                 googleCalendarChecked={addToGoogle}
                 onGoogleCalendarChange={setAddToGoogle}
             >
                 <div className="flex flex-col gap-5">
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 text-sm break-words">
                         {behalfEmail ? (
                             <span>
                                 ¿Estás seguro de crear una reserva para
-                                <strong className="text-[#0a3fa6]"> {behalfEmail}</strong>
+                    <strong className="text-[#0a3fa6] break-all"> {behalfEmail}</strong>
                             </span>
                         ) : (
                             <span>¿Estás seguro de que quieres reservar</span>
@@ -244,7 +268,8 @@ export default function Home() {
 
                     {/* SECCIÓN EXCLUSIVA ADMIN: Reservar para otro */}
                     {user?.rol === 'ADMIN' && (
-                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-left animate-in fade-in zoom-in-95">
+                        <div
+                            className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-left animate-in fade-in zoom-in-95">
                             <label className="block text-xs font-bold text-blue-800 uppercase mb-2">
                                 Opción Admin: Reservar para estudiante
                             </label>
@@ -252,10 +277,16 @@ export default function Home() {
                                 type="email"
                                 placeholder="ejemplo@ufromail.cl"
                                 value={behalfEmail}
-                                onChange={(e) => setBehalfEmail(e.target.value)}
+                                onChange={handleEmailChange}
+                                maxLength={100}
                                 className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-blue-300 mb-2"
                             />
-                            <p className="text-[11px] text-blue-600 leading-tight">
+                            {!isEmailValid && (
+                                <p className="text-[12px] text-red-600 mt-2 font-bold ">
+                                    El correo debe terminar en @ufromail.cl y tener máximo 100 caracteres.
+                                </p>
+                            )}
+                            <p className="text-[12px] text-blue-600 leading-tight">
                                 {behalfEmail ?
                                     "Nota: Si marcas la casilla de abajo, se intentará agregar al calendario del estudiante (si tiene cuenta)." :
                                     "Si dejas este campo vacío, la reserva será a tu nombre."}
