@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
 import { http } from '../services/http';
-import API_BASE from '../apiconfig';
 
 interface User {
     id: number;
@@ -45,8 +44,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         fetchUser();
     }, []);
 
-    const logout = () => {
-        window.location.href = `${API_BASE || 'http://localhost:8080/api/v1'}/logout`;
+    const logout = async () => {
+        try {
+            // Enviamos POST al backend para invalidar la sesión y borrar cookies en el servidor
+            await http.post('/logout');
+        } catch (error) {
+            console.error("Error al cerrar sesión:", error);
+        } finally {
+            setUser(null);
+            window.location.href = '/';
+        }
     };
 
     const openLoginModal = () => setIsLoginModalOpen(true);
