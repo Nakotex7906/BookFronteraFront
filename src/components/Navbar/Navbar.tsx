@@ -2,7 +2,7 @@ import { Link, NavLink } from "react-router-dom";
 import { useState } from "react";
 import logoUfro from '../../assets/icons/Logo_Ufro.png';
 import { useAuth } from "../../context/AuthContext";
-import apiClient from "../../services/api"; // Importamos cliente API
+import {http} from "../../services/http";
 import {
     HouseIcon,
     CalendarIcon,
@@ -33,7 +33,7 @@ export default function Navbar() {
         setIsSwitchingRole(true);
         try {
             // Llamada al endpoint del backend
-            await apiClient.patch('/v1/users/toggle-role');
+            await http.patch('/users/toggle-role');
             // Recargamos la página para actualizar permisos y UI
             window.location.reload();
         } catch (error) {
