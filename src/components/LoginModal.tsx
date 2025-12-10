@@ -4,7 +4,8 @@ import { InfoIcon, XIcon } from "@phosphor-icons/react";
 
 export const LoginModal: React.FC = () => {
     const { isLoginModalOpen, closeLoginModal } = useAuth();
-    const googleLoginUrl = "http://localhost:8080/oauth2/authorization/google";
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+    const googleLoginUrl = `${API_URL.replace('/api/v1', '')}/oauth2/authorization/google`;
 
     if (!isLoginModalOpen) return null;
 
