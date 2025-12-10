@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import apiClient from '../services/api';
+import { AvailabilityApi } from '../services/AvailabilityApi'; // <-- Usamos el servicio correcto
 import type { Room } from '../types/room';
 import type { TimeSlot, Availability } from '../types/schedule';
 
@@ -13,32 +13,39 @@ export function useAvailability(dateISO: string) {
     useEffect(() => {
         if (!dateISO) return;
 
+        // Creamos un controlador para poder cancelar la petición si el componente se desmonta
+        const controller = new AbortController();
+
         const fetchAvailability = async () => {
             setLoading(true);
             setMatrix([]);
             setError(null);
             try {
-                // El frontend envía params: { date: ... }
-                // Ahora el backend con @RequestParam("date") lo leerá correctamente.
-                const response = await apiClient.get('/v1/availability', {
-                    params: { date: dateISO },
-                });
+                // Usamos AvailabilityApi que ya usa 'http.ts' y la variable de entorno
+                const data = await AvailabilityApi.getAvailability(dateISO, controller.signal);
 
-                const data = response.data;
                 setRooms(data?.rooms || []);
                 setSlots(data?.slots || []);
                 setMatrix(data?.availability || []);
 
-            } catch (err) {
+            } catch (err: any) {
+                // Ignoramos errores de cancelación (cuando cambias rápido de fecha)
+                if (err.name === 'CanceledError' || err.message === 'canceled') return;
+
                 console.error("Error fetching availability:", err);
                 setError('No se pudo cargar la disponibilidad.');
-                setMatrix([]); // Asegura que quede vacío si falla
+                setRooms([]);
+                setSlots([]);
+                setMatrix([]);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchAvailability();
+
+        // Cleanup: Cancela la petición si el usuario cambia de fecha rápido
+        return () => controller.abort();
 
     }, [dateISO]);
 
