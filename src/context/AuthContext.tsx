@@ -6,6 +6,7 @@ interface User {
     email: string;
     nombre: string;
     rol: 'STUDENT' | 'ADMIN';
+    canSwitchRole: boolean;
 }
 
 interface AuthContextType {

@@ -18,6 +18,7 @@ import {
 
 export default function Navbar() {
     const { user, isLoading, logout, openLoginModal } = useAuth();
+    const canSwitchRole = user?.canSwitchRole || false;
 
     // Estados de menús
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -123,7 +124,6 @@ export default function Navbar() {
                                     className="absolute top-full right-0 z-10 mt-2 w-64 rounded-xl bg-white p-3 shadow-xl ring-1 ring-black/5 flex flex-col gap-2"
                                     onMouseLeave={() => setIsAccountMenuOpen(false)}
                                 >
-
                                     {/* INFO DE ROL */}
                                     <div className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg">
                                         <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -139,19 +139,22 @@ export default function Navbar() {
                                         </span>
                                     </div>
 
-                                    {/* BOTÓN CAMBIAR ROL */}
-                                    <button
-                                        onClick={handleSwitchRole}
-                                        disabled={isSwitchingRole}
-                                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-[#002976] hover:bg-blue-50 transition-colors disabled:opacity-50"
-                                    >
-                                        <ArrowsLeftRightIcon size={20} weight="bold" />
-                                        <span>
-                                            {isSwitchingRole ? "Cambiando..." : "Cambiar Rol"}
-                                        </span>
-                                    </button>
-
-                                    <div className="h-px bg-gray-100 my-1"></div>
+                                    {/* CONDICIONAL DESKTOP: SOLO SI TIENE PERMISO  */}
+                                    {canSwitchRole && (
+                                        <>
+                                            <button
+                                                onClick={handleSwitchRole}
+                                                disabled={isSwitchingRole}
+                                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-[#002976] hover:bg-blue-50 transition-colors disabled:opacity-50"
+                                            >
+                                                <ArrowsLeftRightIcon size={20} weight="bold" />
+                                                <span>
+                                                    {isSwitchingRole ? "Cambiando..." : "Cambiar Rol"}
+                                                </span>
+                                            </button>
+                                            <div className="h-px bg-gray-100 my-1"></div>
+                                        </>
+                                    )}
 
                                     <button
                                         onClick={() => { logout(); setIsAccountMenuOpen(false); }}
@@ -185,7 +188,6 @@ export default function Navbar() {
 
                         {/* Acciones Móvil */}
                         <div className="border-t border-gray-100 p-4 space-y-3">
-                            {/* Info Rol Móvil */}
                             <div className="flex items-center justify-between px-2">
                                 <span className="text-sm font-medium text-gray-500">Rol Actual:</span>
                                 <span className={`text-xs font-bold px-2 py-1 rounded-full ${
@@ -195,17 +197,18 @@ export default function Navbar() {
                                 </span>
                             </div>
 
-                            {/* Botón Cambiar Rol Móvil */}
-                            <button
-                                onClick={handleSwitchRole}
-                                disabled={isSwitchingRole}
-                                className="flex w-full items-center gap-3 px-3 py-3 text-base font-medium text-[#002976] hover:bg-blue-50 rounded-lg disabled:opacity-50"
-                            >
-                                <ArrowsLeftRightIcon size={22} />
-                                {isSwitchingRole ? "Cambiando..." : "Cambiar Rol"}
-                            </button>
+                            {/* CONDICIONAL MÓVIL: SOLO SI TIENE PERMISO */}
+                            {canSwitchRole && (
+                                <button
+                                    onClick={handleSwitchRole}
+                                    disabled={isSwitchingRole}
+                                    className="flex w-full items-center gap-3 px-3 py-3 text-base font-medium text-[#002976] hover:bg-blue-50 rounded-lg disabled:opacity-50"
+                                >
+                                    <ArrowsLeftRightIcon size={22} />
+                                    {isSwitchingRole ? "Cambiando..." : "Cambiar Rol"}
+                                </button>
+                            )}
 
-                            {/* Botón Cerrar Sesión Móvil */}
                             <button
                                 onClick={() => { setIsMobileAccountOpen(!isMobileAccountOpen); setIsMobileMenuOpen(false); }}
                                 className="flex w-full items-center justify-between text-left"
@@ -217,7 +220,6 @@ export default function Navbar() {
                                 <CaretDownIcon size={16} className="text-gray-400 mr-2"/>
                             </button>
 
-                            {/* Submenú móvil para logout si se expande la cuenta */}
                             {isMobileAccountOpen && (
                                 <button onClick={logout} className="flex w-full items-center gap-3 px-6 py-2 text-base font-medium text-red-600 hover:bg-red-50 rounded-lg">
                                     <SignOutIcon size={22} /> Cerrar sesión
