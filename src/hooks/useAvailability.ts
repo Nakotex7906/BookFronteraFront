@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import apiClient from '../services/api';
+import { http } from '../services/http';
 import type { Room } from '../types/room';
 import type { TimeSlot, Availability } from '../types/schedule';
 
@@ -20,7 +20,7 @@ export function useAvailability(dateISO: string) {
             try {
                 // El frontend envía params: { date: ... }
                 // Ahora el backend con @RequestParam("date") lo leerá correctamente.
-                const response = await apiClient.get('/v1/availability', {
+                const response = await http.get('/availability', {
                     params: { date: dateISO },
                 });
 
