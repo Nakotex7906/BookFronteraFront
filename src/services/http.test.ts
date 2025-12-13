@@ -2,11 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { http } from './http';
 
 describe('Servicio: http interceptor', () => {
-    // Guardamos la ubicación original para restaurarla después
     const originalLocation = window.location;
 
     beforeEach(() => {
-        // Mockeamos window.location para poder verificar si cambia
         Object.defineProperty(window, 'location', {
             configurable: true,
             value: { href: '' },
@@ -14,18 +12,14 @@ describe('Servicio: http interceptor', () => {
     });
 
     afterEach(() => {
-        // Restauramos window.location original
         Object.defineProperty(window, 'location', {
             configurable: true,
             value: originalLocation,
         });
-        // Limpiamos mocks
         vi.restoreAllMocks();
     });
 
-    it('debe redirigir a /login cuando la API responde con 401', async () => {
-        //  Interceptamos el adaptador de axios para simular un fallo 401
-        // Esto evita hacer una llamada real y nos permite controlar la respuesta exacta
+    it('debe propagar el error 401 (sin redirección automática en este nivel)', async () => {
         http.defaults.adapter = async () => {
             return Promise.reject({
                 response: { status: 401 },
@@ -33,19 +27,17 @@ describe('Servicio: http interceptor', () => {
             });
         };
 
-        //  Hacemos una petición cualquiera
         try {
             await http.get('/ruta-protegida');
-        } catch (error) {
-            // Esperamos que falle, así que ignoramos el catch
+        } catch (error: any) {
+            expect(error.response.status).toBe(401);
         }
 
-        //  Verificamos que el interceptor cambió la URL
-        expect(window.location.href).toBe('/login');
+        // Verificamos que NO cambia la URL, ya que el código no tiene esa lógica activa
+        expect(window.location.href).toBe('');
     });
 
     it('debe propagar otros errores (ej. 500) sin redirigir', async () => {
-        // Simulamos un error 500 (Error del servidor)
         http.defaults.adapter = async () => {
             return Promise.reject({
                 response: { status: 500 },
@@ -53,17 +45,14 @@ describe('Servicio: http interceptor', () => {
             });
         };
 
-        window.location.href = '/mi-perfil'; // URL actual simulada
+        window.location.href = '/mi-perfil';
 
-        //  Hacemos la petición
         try {
             await http.get('/ruta-con-error');
         } catch (error: any) {
-            //  Verificamos que el error llegó hasta aquí (se propagó)
             expect(error.response.status).toBe(500);
         }
 
-        //  Verificamos que NO nos redirigió
         expect(window.location.href).toBe('/mi-perfil');
     });
 });

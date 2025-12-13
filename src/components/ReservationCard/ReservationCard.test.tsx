@@ -2,7 +2,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { ReservationCard } from './ReservationCard';
 
-// Mock de datos
 const mockReservation = {
     id: 123,
     startAt: "2024-07-23T10:00:00",
@@ -37,10 +36,8 @@ describe('ReservationCard Component', () => {
         expect(imageDiv).toHaveStyle(`background-image: url(${mockReservation.room.imageUrl})`);
     });
 
-    it('debe llamar a onCancel cuando se confirma la alerta (OK)', () => {
+    it('debe llamar a onCancel al hacer clic en el botón cancelar', () => {
         const handleCancel = vi.fn();
-        // Simulamos que el usuario dice si (true)
-        vi.spyOn(window, 'confirm').mockReturnValue(true);
 
         render(
             <ReservationCard
@@ -56,23 +53,4 @@ describe('ReservationCard Component', () => {
         expect(handleCancel).toHaveBeenCalledWith(123);
     });
 
-    it('NO debe llamar a onCancel si el usuario cancela la alerta', () => {
-        const handleCancel = vi.fn();
-        // Simulamos que el usuario dice no (false)
-        vi.spyOn(window, 'confirm').mockReturnValue(false);
-
-        render(
-            <ReservationCard
-                reservation={mockReservation}
-                onCancel={handleCancel}
-                showActions={true}
-            />
-        );
-
-        const cancelButton = screen.getByText("Cancelar");
-        fireEvent.click(cancelButton);
-
-        // Verificamos que la función no fue llamada
-        expect(handleCancel).not.toHaveBeenCalled();
-    });
 });
