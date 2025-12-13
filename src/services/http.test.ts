@@ -55,4 +55,18 @@ describe('Servicio: http interceptor', () => {
 
         expect(window.location.href).toBe('/mi-perfil');
     });
+    it('debe interceptar la respuesta y extraer el token XSRF si existe', async () => {
+        const successHandler = (http.interceptors.response as any).handlers[0].fulfilled;
+
+        const mockResponse = {
+            headers: {
+                'x-xsrf-token': 'TOKEN-SUPER-SECRETO-123'
+            },
+            data: { ok: true }
+        };
+
+        successHandler(mockResponse);
+
+        expect(http.defaults.headers.common['X-XSRF-TOKEN']).toBe('TOKEN-SUPER-SECRETO-123');
+    });
 });
