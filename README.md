@@ -64,4 +64,3 @@ Utilizamos Playwright para simular flujos completos de usuario (Login, Reservar,
 # Ejecutar los tests E2E (asegúrate de tener el backend y frontend corriendo)
 npx playwright test
 ```
-Nota: Para ejecutar los tests E2E, es recomendable que tanto el Frontend como el Backend estén levantados localmente.
