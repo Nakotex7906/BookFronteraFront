@@ -46,14 +46,22 @@ npm run dev
 ```
 La aplicación estará disponible inmediatamente en: http://localhost:5173
 
-# Ejecutar Pruebas (E2E)
-El proyecto utiliza Playwright para pruebas de extremo a extremo (End-to-End), 
-asegurando que flujos críticos como "Buscar Sala", "Mis Reservas" y "Admin Panel" funcionen como se espera.
-```
-# Ejecutar los tests en modo headless (sin abrir navegador)
-npx playwright test
+# Ejecutar Pruebas 
+El proyecto cuenta con dos tipos de pruebas para asegurar la calidad del código: Unitarias y End-to-End (E2E).
 
-# O usando el script del package.json
-npm run test:e2e
+Pruebas Unitarias (Vitest)
+Utilizamos Vitest junto con React Testing Library para probar componentes aislados, hooks y utilidades.
+```
+# Ejecutar todas las pruebas unitarias
+npm run test
+
+# Ejecutar pruebas con reporte de cobertura (Coverage)
+npm run test:coverage
+```
+Pruebas E2E (Playwright)
+Utilizamos Playwright para simular flujos completos de usuario (Login, Reservar, Admin Panel).
+```
+# Ejecutar los tests E2E (asegúrate de tener el backend y frontend corriendo)
+npx playwright test
 ```
 Nota: Para ejecutar los tests E2E, es recomendable que tanto el Frontend como el Backend estén levantados localmente.
