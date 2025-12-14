@@ -6,15 +6,26 @@ export const http = axios.create({
     baseURL: API_URL,
     timeout: 10_000,
     withCredentials: true,
+    // Nota: xsrfCookieName ya no nos sirve de mucho por el tema de puertos, pero déjalo por si acaso.
+    xsrfCookieName: "XSRF-TOKEN",
+    xsrfHeaderName: "X-XSRF-TOKEN",
 });
 
-// Interceptor para redirigir al login si la sesión expira
 http.interceptors.response.use(
-    (r) => r,
-    (error) => {
-        if (error.response?.status === 401 && !error.config.url.includes('/users/me')) {
-            window.location.href = '/login';
+    (response) => {
+        // Buscamos el token en los headers de respuesta
+        const csrfToken = response.headers['x-xsrf-token'];
+
+        if (csrfToken) {
+            // Lo guardamos en los defaults de Axios para que se envíe en la próxima petición
+            http.defaults.headers.common['X-XSRF-TOKEN'] = csrfToken;
         }
+        return response;
+    },
+    (error) => {
+        // (Mantén tu lógica de error 401 aquí si la tenías)
         return Promise.reject(error);
     }
 );
+
+export default http;
