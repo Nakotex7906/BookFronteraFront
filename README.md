@@ -46,6 +46,21 @@ npm run dev
 ```
 La aplicación estará disponible inmediatamente en: http://localhost:5173
 
+## Ejecucion con Docker
+Si prefieres ejecutar la aplicación en un contenedor aislado utilizando la imagen de producción (Nginx), sigue estos pasos:
+
+Construir la imagen Es necesario pasar la URL de la API como argumento (build-arg) para que Vite la incorpore durante la compilación.
+
+(Nota: Si usas PowerShell en Windows, el comando es el mismo si lo pegas en una sola línea):
+```
+docker build --build-arg VITE_API_URL=http://localhost:8080/api/v1 -t bookfrontera-front .
+```
+Correr el contenedor Esto iniciará el servidor Nginx en el puerto 5173 de tu máquina local.
+```
+docker run -d -p 5173:80 --name bookfrontera-front bookfrontera-front
+```
+La aplicación estará disponible en: http://localhost:5173
+
 # Ejecutar Pruebas 
 El proyecto cuenta con dos tipos de pruebas para asegurar la calidad del código: Unitarias y End-to-End (E2E).
 
